@@ -5,6 +5,9 @@ description = "A flexible, easy to run routing engine."
 authors = ["Nick Bolten <nbolten@gmail.com>"]
 license = "MIT"
 
+[tool.poetry.scripts]
+unweaver = "unweaver:cli.unweaver"
+
 [tool.poetry.dependencies]
 python = "^3.6"
 flask = "^1.0"
