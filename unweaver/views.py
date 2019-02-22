@@ -3,7 +3,7 @@ from marshmallow import fields
 import networkx as nx
 from webargs.flaskparser import use_args
 
-from .shortest_path import shortest_path
+from .shortest_path import shortest_path, NoPathError
 
 
 def add_view(app, profile):
@@ -32,7 +32,13 @@ def add_view(app, profile):
         # lat2 = 47.652136
         cost_function = profile.cost_function_generator(**args)
 
-        cost, path, edges = shortest_path(g.G, lon1, lat1, lon2, lat2, cost_function)
+        try:
+            cost, path, edges = shortest_path(
+                g.G, lon1, lat1, lon2, lat2, cost_function
+            )
+        except NoPathError:
+            return jsonify({"status": "Failed", "msg": "No path"})
+
         directions = profile.directions(cost, path, edges)
 
         return jsonify(directions)

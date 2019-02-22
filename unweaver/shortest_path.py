@@ -6,6 +6,10 @@ from networkx.algorithms.shortest_paths import single_source_dijkstra
 from .graph import prepare_search
 
 
+class NoPathError(Exception):
+    pass
+
+
 def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=None):
     """Find the on-graph shortest path between two geolocated points.
 
@@ -62,6 +66,8 @@ def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=No
                 target=destination["node"],
                 weight=cost_function,
             )
+            if cost is None:
+                continue
             cost += origin["cost"]
             cost += destination["cost"]
 
@@ -74,6 +80,9 @@ def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=No
                 path += [-2]
                 edges = edges + [destination["edge"]]
             attempts.append((cost, path, edges))
+
+    if not attempts:
+        raise NoPathError("No viable path found.")
 
     best_cost, best_path, best_edges = sorted(attempts, key=lambda x: x[0])[0]
 
