@@ -1,0 +1,18 @@
+# Python bytecode
+*.pyc
+*__pycache__
+
+# Install test files
+*.egg-info
+
+# Python virtual environment
+venv
+
+# vim editor files
+*.swp
+
+# Temporary and/or hacking directories
+demos
+
+# Graph builds
+*.db

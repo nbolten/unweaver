@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "unweaver"
+version = "0.1.0"
+description = "A flexible, easy to run routing engine."
+authors = ["Nick Bolten <nbolten@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+flask = "^1.0"
+webargs = "^5.1"
+click = "^7.0"
+entwiner = {git = "https://github.com/nbolten/entwiner.git", rev = "ea01571ee2468a2865edbb57638a55a3f3be6f1f"}
+shapely = "^1.6"
+
+[tool.poetry.dev-dependencies]
+black = "18.9b0"
+pre-commit = "^1.14"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
