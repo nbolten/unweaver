@@ -59,7 +59,15 @@ def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=No
 
     attempts = []
     for origin in waypoints["origin"]:
+        # TODO: should search around for other reasonable origin/destination points
+        # if the one selected is unroutable
+        if origin["cost"] is None:
+            continue
+
         for destination in waypoints["destination"]:
+            if destination["cost"] is None:
+                continue
+
             cost, path = single_source_dijkstra(
                 G,
                 source=origin["node"],
@@ -68,6 +76,7 @@ def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=No
             )
             if cost is None:
                 continue
+
             cost += origin["cost"]
             cost += destination["cost"]
 
