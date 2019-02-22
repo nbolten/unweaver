@@ -9,7 +9,7 @@ from unweaver.parsers import parse_profiles
 from unweaver.views import add_view
 
 
-def run_app(path, port=8000, add_headers=None, debug=False):
+def run_app(path, host="localhost", port=8000, add_headers=None, debug=False):
     if add_headers is None:
         add_headers = [
             ("Access-Control-Allow-Origin", "*"),
@@ -48,4 +48,4 @@ def run_app(path, port=8000, add_headers=None, debug=False):
     for profile in profiles:
         add_view(app, profile)
 
-    app.run(port=port)
+    app.run(host=host, port=port)
