@@ -3,7 +3,7 @@ import json
 import os
 
 import entwiner
-from shapely.geometry import LineString, Point, shape
+from shapely.geometry import LineString, Point, mapping, shape
 
 from .geo import cut
 
@@ -118,7 +118,9 @@ def prepare_search(
         :type flip: list of str
 
         """
-        edge["_geometry"] = LineString(reversed(edge["_geometry"].coords))
+        edge["_geometry"]["coordinates"] = list(
+            reversed(edge["_geometry"]["coordinates"])
+        )
         if invert is not None:
             for key in invert:
                 if key in edge:
@@ -135,7 +137,7 @@ def prepare_search(
         edges = []
         for geom in geoms:
             edge = copy.deepcopy(nearest)
-            edge["_geometry"] = geom
+            edge["_geometry"] = mapping(geom)
             # IDEA: do we need a handler for 0-length edges? Should they exist?
             if "length" in nearest and edge["length"] is not None:
                 # TODO: this will also be impacted by a non-Euclidian projection like

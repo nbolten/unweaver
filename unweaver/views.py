@@ -39,7 +39,18 @@ def add_view(app, profile):
         except NoPathError:
             return jsonify({"status": "Failed", "msg": "No path"})
 
-        directions = profile.directions(cost, path, edges)
+        origin = {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [lon1, lat1]},
+            "properties": {},
+        }
+        destination = {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [lon2, lat2]},
+            "properties": {},
+        }
+
+        directions = profile.directions(origin, destination, cost, path, edges)
 
         return jsonify(directions)
 
