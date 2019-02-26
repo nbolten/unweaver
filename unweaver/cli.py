@@ -22,10 +22,11 @@ def build(directory):
 
 @unweaver.command()
 @click.argument("directory", type=click.Path("r"))
-@click.option("--host", "-h")
-@click.option("--port", "-p")
+@click.option("--host", "-h", default="localhost")
+@click.option("--port", "-p", default=8000)
 @click.option("--debug", is_flag=True)
-def run(directory, host="localhost", port=8000, debug=False):
+def run(directory, host, port, debug=False):
+    print(host, port)
     click.echo("Starting server in {}...".format(directory))
     # TODO: catch errors in starting server
     # TODO: spawn process?
