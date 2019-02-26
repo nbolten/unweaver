@@ -80,7 +80,7 @@ def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=No
             cost += origin["cost"]
             cost += destination["cost"]
 
-            edges = [G[u][v] for u, v in zip(path, path[1:])]
+            edges = [dict(G[u][v]) for u, v in zip(path, path[1:])]
 
             if "edge" in origin:
                 path = [-1] + path
