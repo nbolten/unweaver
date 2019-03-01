@@ -10,11 +10,12 @@ class NoPathError(Exception):
     pass
 
 
+# TODO: accept Point objects rather than lon/lats
 def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=None):
     """Find the on-graph shortest path between two geolocated points.
 
     :param G: The routing graph.
-    :type G: entwiner.graphs.digraphdb.DiGraphDB
+    :type G: entwiner.DiGraphDB
     :param lon1: Longitude of origin point.
     :type lon1: float
     :param lat1: Latitude of origin point.
@@ -37,7 +38,9 @@ def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=No
     """
     # TODO: Extract invertible/flippable edge attributes into the profile.
     origin_context = prepare_search(G, lon1, lat1, invert=invert, flip=flip)
-    destination_context = prepare_search(G, lon2, lat2, invert=invert, flip=flip)
+    destination_context = prepare_search(
+        G, lon2, lat2, invert=invert, flip=flip, is_destination=True
+    )
 
     # If closest points on the graph are on edges, multiple shortest path searches
     # will be done (this is a good point for optimization in future releases) and the

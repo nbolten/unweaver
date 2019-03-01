@@ -39,7 +39,7 @@ def run_app(path, host="localhost", port=8000, add_headers=None, debug=False):
     @app.teardown_request
     def after_request(response):
         # TODO: add CORS info?
-        g.G.graphdb.conn.close()
+        g.G.sqlitegraph.conn.close()
         g.G = None
         # FIXME: add headers to appropriate context manager in Flask 1.0
         # for header in add_headers:

@@ -3,7 +3,7 @@ from marshmallow import fields
 import networkx as nx
 from webargs.flaskparser import use_args
 
-from .shortest_path import shortest_path, NoPathError
+from .trip import get_trip
 
 
 def add_view(app, profile):
@@ -11,47 +11,16 @@ def add_view(app, profile):
     url = "/directions/{}.json".format(profile.name)
 
     # TODO: do any kind of input validation (at least handle errors)
-    args = {arg["name"]: arg["type"] for arg in profile.args}
-    args["lon1"] = fields.Float()
-    args["lat1"] = fields.Float()
-    args["lon2"] = fields.Float()
-    args["lat2"] = fields.Float()
+    arg_schema = {arg["name"]: arg["type"] for arg in profile.args}
+    arg_schema["lon1"] = fields.Float()
+    arg_schema["lat1"] = fields.Float()
+    arg_schema["lon2"] = fields.Float()
+    arg_schema["lat2"] = fields.Float()
 
-    @use_args(args)
+    @use_args(arg_schema)
     def route(args):
-        try:
-            lon1 = args.pop("lon1")
-            lat1 = args.pop("lat1")
-            lon2 = args.pop("lon2")
-            lat2 = args.pop("lat2")
-        except KeyError:
-            return jsonify({"status": "Failed", "msg": "Missing location inputs"}), 400
-        # lon1 = -122.351252
-        # lat1 = 47.649860
-        # lon2 = -122.354380
-        # lat2 = 47.652136
-        cost_function = profile.cost_function_generator(**args)
+        trip = get_trip(g.G, profile, args)
 
-        try:
-            cost, path, edges = shortest_path(
-                g.G, lon1, lat1, lon2, lat2, cost_function
-            )
-        except NoPathError:
-            return jsonify({"status": "Failed", "msg": "No path"})
-
-        origin = {
-            "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [lon1, lat1]},
-            "properties": {},
-        }
-        destination = {
-            "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [lon2, lat2]},
-            "properties": {},
-        }
-
-        directions = profile.directions(origin, destination, cost, path, edges)
-
-        return jsonify(directions)
+        return jsonify(trip)
 
     app.add_url_rule(url, "directions-{}".format(profile.name), route)

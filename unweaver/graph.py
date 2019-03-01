@@ -16,14 +16,14 @@ DWITHIN = 5e-4
 def get_graph(base_path):
     db_path = os.path.join(base_path, "graph.db")
 
-    return entwiner.graphs.digraphdb.DiGraphDB(path=db_path)
+    return entwiner.DiGraphDB(path=db_path, immutable=True)
 
 
 def edges_dwithin(G, lon, lat, distance):
     """Finds edges within some distance of a point.
 
     :param G: entwiner DiGraph instance.
-    :type G: entwiner.graphs.digraphdb.DiGraphDB
+    :type G: entwiner.DiGraphDB
     :param lon: The longitude of the query point.
     :type lon: float
     :param lat: The latitude of the query point.
@@ -42,19 +42,19 @@ def edges_dwithin(G, lon, lat, distance):
 
     bbox = [lon - distance, lat - distance, lon + distance, lat + distance]
 
-    index_query = G.graphdb.conn.execute(rtree_sql, bbox)
+    index_query = G.sqlitegraph.execute(rtree_sql, bbox)
     rowids = [str(r["rowid"]) for r in index_query]
 
-    query = G.graphdb.conn.execute(
+    # TODO: put fast rowid-based lookup in G.sqlitegraph object.
+    query = G.sqlitegraph.execute(
         """
-        SELECT rowid, AsGeoJSON(_geometry) _geometry, *
+        SELECT rowid, *, AsGeoJSON(_geometry) _geometry
           FROM edges
          WHERE rowid IN ({})
     """.format(
             ", ".join(rowids)
         )
     )
-
     rows = [{**dict(r), "_geometry": shape(json.loads(r["_geometry"]))} for r in query]
 
     return rows
@@ -72,7 +72,7 @@ def prepare_search(
     results can be displayed.
 
     :param G: Graph instance.
-    :type G: entwiner.graphs.digraphdb.DiGraphDB
+    :type G: entwiner.DiGraphDB
     :param lon: The longitude of the query point.
     :type lon: float
     :param lat: The latitude of the query point.
@@ -118,9 +118,8 @@ def prepare_search(
         :type flip: list of str
 
         """
-        edge["_geometry"]["coordinates"] = list(
-            reversed(edge["_geometry"]["coordinates"])
-        )
+        rev_coords = list(reversed(edge["_geometry"]["coordinates"]))
+        edge["_geometry"]["coordinates"] = rev_coords
         if invert is not None:
             for key in invert:
                 if key in edge:
