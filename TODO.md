@@ -1,10 +1,15 @@
+## Bugs
+
 ## Stability
 
 ### Allow the use of other servers, e.g. gunicorn
 
-## Speed
+## Routing Speed
 
-### Building the graph should only take a few seconds. Track down the slow part.
+### Use multi-source dijkstra
+
+### networkx's dijkstra uses G[key].items(), which means multiple round trips to the
+db. Need to either replace nx's Atlas upstream in `entwiner` or reimplement dijkstra.
 
 ## entwiner
 
