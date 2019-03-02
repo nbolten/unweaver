@@ -69,7 +69,6 @@ def shortest_path(
                 )
         routes = []
         for to_node, to_seed in seed_cluster_2.items():
-            # FIXME: use multi_source_dijkstra
             try:
                 cost, path = multi_source_dijkstra(
                     G,
