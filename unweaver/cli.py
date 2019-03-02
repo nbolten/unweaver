@@ -12,11 +12,12 @@ def unweaver():
 
 @unweaver.command()
 @click.argument("directory", type=click.Path("r"))
-def build(directory):
+@click.option("--changes-sign", multiple=True)
+def build(directory, changes_sign):
     click.echo("Building graph...")
     # TODO: catch errors in starting server
     # TODO: spawn process?
-    build_graph(directory)
+    build_graph(directory, changes_sign=changes_sign)
     click.echo("Done.")
 
 

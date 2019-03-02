@@ -60,8 +60,9 @@ def edges_dwithin(G, lon, lat, distance):
     return rows
 
 
+# TODO: consider an object-oriented / struct-ie approach? Lots of data reuse.
 def prepare_search(
-    G, lon, lat, is_destination=False, dwithin=DWITHIN, invert=None, flip=None
+    G, lon, lat, n, is_destination=False, dwithin=DWITHIN, invert=None, flip=None
 ):
     """Produce the initial data needed to begin an on-graph search given input
     coordinates. If the closest element is a node, the search can begin with no other
@@ -77,6 +78,8 @@ def prepare_search(
     :type lon: float
     :param lat: The latitude of the query point.
     :type lat: float
+    :param n: Maximum number of nearest candidates to return, sorted by distance.
+    :type n: int
     :param is_destination: Whether the query point is a destination. It is considered
                            an origin by default. This impacts the orientation of any
                            temporary edges created: they point 'away' from the query
@@ -91,75 +94,107 @@ def prepare_search(
     :param flip: A list of edge attributes to flip (i.e. boolean-like, either 0/1 or
                  True/False) for reversed edges. e.g. a one-way flag.
     :type flip: list of str
+    :returns: Generator of candidates sorted by distance. Each candidate is a dict
+              with a "type" key and data. If a candidate is a node, it has two entries:
+              "type": "node" and "node": key, where the node key is an in-graph node
+              identity. If a candidate is an edge, it has two entries: "type": "edge"
+              and "edges": halfedges, where halfedges is a list of dicts describing
+              the two temporary edges representing a splitting of the parent edge. Each
+              half edge dict has a "node" key for the on-graph node with which it is
+              associated and an "edge" key with the full dict-like edge data.
+    :rtype: generator of dicts
+
 
     """
+    # TODO: use real distances, not lon-lat
     point = Point(lon, lat)
 
+    # TODO: this is just a hack for proper nearest-neighbors functionality.
+    # Implement priority queue-based "true nearest neighbors" idea inspired by rtree
+    # implementations.
     edge_candidates = edges_dwithin(G, lon, lat, dwithin)
-    # Get nearest
-    # TODO: use real distances, not lon-lat
     edge_candidates.sort(key=lambda r: r["_geometry"].distance(point))
-    nearest = edge_candidates[0]
-    edge_geometry = nearest["_geometry"]
 
-    distance_along = edge_geometry.project(point)
-    geoms = cut(edge_geometry, distance_along)
-    # Pop the row ID, as it's not part of the edge attribute data anyways
-    rowid = nearest.pop("rowid")
+    def split_edge(edge):
+        geometry = edge["_geometry"]
+        distance = geometry.project(point)
 
-    def reverse_edge(edge, invert=None, flip=None):
-        """Mutates edge in-place to be in the reverse orientation.
+        if is_start_node(distance, geometry):
+            # We're at the start of an edge - so we're already on the graph!
+            return {"type": "node", "node_id": edge["_u"]}
+        elif is_end_node(distance, geometry):
+            # We're at the end of an edge - so we're already on the graph!
+            return {"type": "node", "node": edge["_v"]}
+        else:
+            # Candidate is an edge - need to split and create "temporary node"
+            geoms = cut(geometry, distance)
+            rowid = edge.pop("rowid")
 
-        :param edge: dict-like edge data (must have _geometry:LineString pair)
-        :type edge: dict-like
-        :param invert: Keys to 'invert', i.e. multiply by -1
-        :type invert: list of str
-        :param flip: Keys to 'flip', i.e. truthy: 0s becomes 1, Trues become Falses.
-        :type flip: list of str
+            new_edges = [new_edge(geom, edge) for geom in geoms]
 
-        """
-        rev_coords = list(reversed(edge["_geometry"]["coordinates"]))
-        edge["_geometry"]["coordinates"] = rev_coords
-        if invert is not None:
-            for key in invert:
-                if key in edge:
-                    edge[key] = edge[key] * -1
-        if flip is not None:
-            for key in flip:
-                if key in edge:
-                    edge[key] = type(edge[key])(not edge[key])
-
-    search_data = {}
-
-    if len(geoms) > 1:
-        search_data["type"] = "edge"
-        edges = []
-        for geom in geoms:
-            edge = copy.deepcopy(nearest)
-            edge["_geometry"] = mapping(geom)
-            # IDEA: do we need a handler for 0-length edges? Should they exist?
-            if "length" in nearest and edge["length"] is not None:
-                # TODO: this will also be impacted by a non-Euclidian projection like
-                # lon-lat
-                edge["length"] = edge["length"] * geom.length / edge_geometry.length
+            if is_destination:
+                reverse_edge(new_edges[1])
             else:
-                edge["length"] = 0
-            edges.append(edge)
+                reverse_edge(new_edges[0])
 
-        if is_destination:
-            reverse_edge(edges[1])
-        else:
-            reverse_edge(edges[0])
-        search_data["edges"] = edges
-        search_data["node_ids"] = [nearest["_u"], nearest["_v"]]
+            return {
+                "type": "edge",
+                "edges": [
+                    {"node": edge["_u"], "half_edge": new_edges[0]},
+                    {"node": edge["_v"], "half_edge": new_edges[1]},
+                ],
+            }
+
+    return (split_edge(c) for c in edge_candidates[:n])
+
+
+def reverse_edge(edge, invert=None, flip=None):
+    """Mutates edge in-place to be in the reverse orientation.
+
+    :param edge: dict-like edge data (must have _geometry:LineString pair)
+    :type edge: dict-like
+    :param invert: Keys to 'invert', i.e. multiply by -1
+    :type invert: list of str
+    :param flip: Keys to 'flip', i.e. truthy: 0s becomes 1, Trues become Falses.
+    :type flip: list of str
+
+    """
+    rev_coords = list(reversed(edge["_geometry"]["coordinates"]))
+    edge["_geometry"]["coordinates"] = rev_coords
+    if invert is not None:
+        for key in invert:
+            if key in edge:
+                edge[key] = edge[key] * -1
+    if flip is not None:
+        for key in flip:
+            if key in edge:
+                edge[key] = type(edge[key])(not edge[key])
+
+
+def is_start_node(distance, linestring):
+    # Semantically equivalent to (edge_geometry.length - distance) == 0
+    # but with floating point math considerations
+    if (linestring.length - distance) < 1e-12:
+        return True
+
+    return False
+
+
+def is_end_node(distance, linestring):
+    if distance > linestring.length:
+        return True
+
+    return False
+
+
+def new_edge(geom, edge):
+    # TODO: Any way to avoid using `copy`?
+    if "length" in edge:
+        length = edge["length"] * (geom.length / edge["_geometry"].length)
     else:
-        search_data["type"] = "node"
-        # There was no need to cut - path starts on a node
-        if (nearest["_geometry"].length / 2) - distance_along > 0:
-            # Nearer to the start
-            search_data["node_id"] = nearest["_u"]
-        else:
-            # Nearer to the end
-            search_data["node_id"] = nearest["_v"]
+        length = edge["length"]
+    edge = copy.copy(edge)
+    edge["_geometry"] = mapping(geom)
+    edge["length"] = length
 
-    return search_data
+    return edge

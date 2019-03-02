@@ -13,7 +13,7 @@ python = "^3.6"
 flask = "^1.0"
 webargs = "^5.1"
 click = "^7.0"
-entwiner = {git = "https://github.com/nbolten/entwiner.git", rev = "e27c4010d3a97197f601731acd4d351d8810429e"}
+entwiner = {git = "https://github.com/nbolten/entwiner.git", rev = "b7258dda2bb905f6fb491ad1aa2b12729cdf407a"}
 shapely = "^1.6"
 
 [tool.poetry.dev-dependencies]

@@ -1,5 +1,12 @@
 ## Bugs
 
+### Rework --changes-sign into config-based option like everything else. layers.json?
+
+### Handle waypoints-on-same-edge case
+
+### Finding nearest path should find nearest *valid* path subject to some constraint /
+reproducible logic. Will currently fail if infinite-cost edge is closest to query point
+
 ## Stability
 
 ### Allow the use of other servers, e.g. gunicorn
@@ -23,3 +30,17 @@ filtering - make them possible.
 Edge attrs are currently fetched using sqlite3.Row, meaning if there is missing data
 ('none' in SQLite), the key and value exist, but the value is None. This is not
 consistent with how one would use networkx - sanitize the dict-like.
+
+## Scaling
+
+### Write Go version
+
+Go is going (ha) to be much faster at most operations, particularly if the graph can
+fit in memory. Users can easily supply new functions via a go plugin - though they
+will need to use the go dev tools (or docker).
+
+### Storage projections / geographic CRS
+
+Lon-lat seems fine as a universal storage base, but some disance calculations would be
+faster in a cartesian reference system. At least add hacks so that distances are
+accurate.
