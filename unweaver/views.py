@@ -19,6 +19,10 @@ def add_view(app, profile):
 
     @use_args(arg_schema)
     def route(args):
+        if g.get("failed_graph", False):
+            return jsonify(
+                {"status": "Failed", "message": "Internal graph read error."}
+            )
         trip = get_trip(g.G, profile, args)
 
         return jsonify(trip)
