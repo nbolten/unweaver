@@ -7,7 +7,9 @@ class MissingLayersError(Exception):
     pass
 
 
-def build_graph(path):
+def build_graph(path, changes_sign=None):
+    if changes_sign is None:
+        changes_sign = []
     layers_path = os.path.join(path, "layers")
     if not os.path.exists(layers_path):
         raise MissingLayersError("layers directory not found.")
@@ -22,6 +24,6 @@ def build_graph(path):
 
     # TODO: specify behavior when graph already exists
     db_path = os.path.join(path, "graph.db")
-    G = entwiner.build.create_graph(layers_files, db_path)
+    G = entwiner.build.create_graph(layers_files, db_path, changes_sign=changes_sign)
 
     return G

@@ -1,17 +1,20 @@
 """Find the on-graph shortest path between two geolocated points."""
 import networkx as nx
-from networkx.algorithms.shortest_paths import single_source_dijkstra
+from networkx.algorithms.shortest_paths import multi_source_dijkstra
 
 
 from .graph import prepare_search
+from .exceptions import InvalidWaypoint
 
 
 class NoPathError(Exception):
     pass
 
 
-# TODO: accept Point objects rather than lon/lats
-def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=None):
+# TODO: use origin/destination terminology and params, make them 2-tuples
+def shortest_path(
+    G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=None, edge_filter=None
+):
     """Find the on-graph shortest path between two geolocated points.
 
     :param G: The routing graph.
@@ -34,68 +37,109 @@ def shortest_path(G, lon1, lat1, lon2, lat2, cost_function, invert=None, flip=No
                  "reversed" scenario for the `invert` parameter. 0s become 1s and Trues
                  become Falses.
     :type flip: list of str
+    :param edge_filter: Function that filters origin/destination edges: if the edge is
+                        "good", the filter returns True, otherwise it returns False.
+    :type edge_filter: callable
 
     """
     # TODO: Extract invertible/flippable edge attributes into the profile.
-    origin_context = prepare_search(G, lon1, lat1, invert=invert, flip=flip)
-    destination_context = prepare_search(
-        G, lon2, lat2, invert=invert, flip=flip, is_destination=True
-    )
+    # NOTE: Written this way to anticipate multi-waypoint routing
+    waypoints = [(lon1, lat1), (lon2, lat2)]
+    pairs = zip(waypoints, waypoints[1:])
+    legs = []
+    for wp1, wp2 in pairs:
+        wp1_candidates = prepare_search(
+            G, wp1[0], wp1[1], n=4, invert=invert, flip=flip
+        )
+        wp2_candidates = prepare_search(
+            G, wp2[0], wp2[1], n=4, invert=invert, flip=flip, is_destination=True
+        )
 
-    # If closest points on the graph are on edges, multiple shortest path searches
-    # will be done (this is a good point for optimization in future releases) and the
-    # cheapest one will be kept.
-    waypoints = {"origin": [], "destination": []}
-    for name, context in zip(
-        ["origin", "destination"], [origin_context, destination_context]
-    ):
-        if context["type"] == "node":
-            waypoints[name].append(
-                {"cost": 0, "node": context["node_id"], "pseudo": False}
-            )
-        else:
-            for edge, node in zip(context["edges"], context["node_ids"]):
-                # TODO: fake numbers of -1 and -2 mean nothing - use them consistently
-                # for downstream user-defined cost functions
-                cost = cost_function(-1, -2, edge)
-                waypoints[name].append({"cost": cost, "node": node, "edge": edge})
-
-    attempts = []
-    for origin in waypoints["origin"]:
-        # TODO: should search around for other reasonable origin/destination points
-        # if the one selected is unroutable
-        if origin["cost"] is None:
-            continue
-
-        for destination in waypoints["destination"]:
-            if destination["cost"] is None:
+        # If closest points on the graph are on edges, multiple shortest path searches
+        # will be done (this is a good point for optimization in future releases) and the
+        # cheapest one will be kept.
+        # TODO: generalize to multi-waypoints.
+        seed_cluster_1 = _waypoint_seeds(wp1_candidates, cost_function)
+        seed_cluster_2 = _waypoint_seeds(wp2_candidates, cost_function)
+        for cluster in (seed_cluster_1, seed_cluster_2):
+            if cluster is None:
+                # FIXME: Should produce more specific feedback - which waypoint?
+                raise InvalidWaypoint(
+                    "One or more waypoint had no valid on-graph start points"
+                )
+        routes = []
+        for to_node, to_seed in seed_cluster_2.items():
+            # FIXME: use multi_source_dijkstra
+            try:
+                cost, path = multi_source_dijkstra(
+                    G,
+                    sources=[k for k, v in seed_cluster_1.items()],
+                    target=to_node,
+                    weight=cost_function,
+                )
+            except nx.exception.NetworkXNoPath:
                 continue
 
-            cost, path = single_source_dijkstra(
-                G,
-                source=origin["node"],
-                target=destination["node"],
-                weight=cost_function,
-            )
             if cost is None:
                 continue
 
-            cost += origin["cost"]
-            cost += destination["cost"]
+            from_node = path[0]
+            from_seed = seed_cluster_1[from_node]
+            cost += from_seed["seed_cost"]
+            cost += to_seed["seed_cost"]
 
             edges = [dict(G[u][v]) for u, v in zip(path, path[1:])]
 
-            if "edge" in origin:
+            if from_seed["type"] == "edge":
                 path = [-1] + path
-                edges = [origin["edge"]] + edges
-            if "edge" in destination:
+                edges = [from_seed["edge"]] + edges
+            if to_seed["type"] == "edge":
                 path += [-2]
-                edges = edges + [destination["edge"]]
-            attempts.append((cost, path, edges))
+                edges = edges + [to_seed["edge"]]
+            routes.append((cost, path, edges))
 
-    if not attempts:
-        raise NoPathError("No viable path found.")
+        # NOTE: Might want to try a new seed for waypoints instead of skipping.
+        if not routes:
+            raise NoPathError("No viable path found.")
 
-    best_cost, best_path, best_edges = sorted(attempts, key=lambda x: x[0])[0]
+        best_cost, best_path, best_edges = sorted(routes, key=lambda x: x[0])[0]
+        legs.append((best_cost, best_path, best_edges))
 
-    return best_cost, best_path, best_edges
+    # TODO: Return multiple legs once multiple waypoints supported
+    return legs[0]
+
+
+def _waypoint_seeds(candidates, cost_function, edge_filter=None):
+    if edge_filter is None:
+        edge_filter = lambda x: True
+
+    for candidate in candidates:
+        if candidate["type"] == "node":
+            # There's no way to filter nodes right now anyways - just keep the
+            # first one.
+            return {
+                candidate["node"]: {"type": "node", "seed_cost": 0, "pseudo": False}
+            }
+        else:
+            if not edge_filter(candidate):
+                continue
+
+            result = {}
+            for seed in candidate["edges"]:
+                cost = cost_function(-1, -2, seed["half_edge"])
+                if cost is None:
+                    continue
+                result[seed["node"]] = {
+                    "type": "edge",
+                    "edge": seed["half_edge"],
+                    "seed_cost": cost,
+                    "pseudo": True,
+                }
+
+            if not result:
+                # Both pseudo-edges were infinite cost. Try the next candidate!
+                continue
+
+            return result
+
+    return None
