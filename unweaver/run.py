@@ -31,9 +31,11 @@ def run_app(path, host="localhost", port=8000, add_headers=None, debug=False):
         try:
             # TODO: any issues with concurrent connections? Should we share one db
             # connection (DiGraphDB instance) vs. reconnecting?
-            g.G = get_graph(path)
-        except:
+            if not g.hasattr("G"):
+                g.G = get_graph(path)
+        except exception as E:
             # TODO: Catch a useful exception?
+            print(e)
             pass
 
     @app.teardown_request
