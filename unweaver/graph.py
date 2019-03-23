@@ -61,7 +61,7 @@ def edges_dwithin(G, lon, lat, distance):
 
 
 # TODO: consider an object-oriented / struct-ie approach? Lots of data reuse.
-def prepare_search(
+def waypoint_candidates(
     G, lon, lat, n, is_destination=False, dwithin=DWITHIN, invert=None, flip=None
 ):
     """Produce the initial data needed to begin an on-graph search given input
@@ -121,7 +121,7 @@ def prepare_search(
 
         if is_start_node(distance, geometry):
             # We're at the start of an edge - so we're already on the graph!
-            return {"type": "node", "node_id": edge["_u"]}
+            return {"type": "node", "node": edge["_u"]}
         elif is_end_node(distance, geometry):
             # We're at the end of an edge - so we're already on the graph!
             return {"type": "node", "node": edge["_v"]}
