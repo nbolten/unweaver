@@ -3,10 +3,10 @@ import os
 import entwiner
 from flask import g
 
-from unweaver.app import create_app
-from unweaver.graph import get_graph
-from unweaver.parsers import parse_profiles
-from unweaver.views import add_view
+from .app import create_app
+from ..graph import get_graph
+from ..parsers import parse_profiles
+from .views import add_views
 
 
 def run_app(path, host="localhost", port=8000, add_headers=None, debug=False):
@@ -47,6 +47,6 @@ def run_app(path, host="localhost", port=8000, add_headers=None, debug=False):
         #     response.headers.add(*header)
 
     for profile in profiles:
-        add_view(app, profile)
+        add_views(app, profile)
 
     app.run(host=host, port=port)
