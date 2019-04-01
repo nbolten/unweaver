@@ -1,7 +1,7 @@
 """unweaver CLI."""
 import click
 
-from unweaver.run import run_app
+from unweaver.server import run_app
 from unweaver.build import build_graph
 
 
