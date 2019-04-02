@@ -207,21 +207,36 @@ def default_directions_function(origin, destination, cost, nodes, edges):
 
 
 def default_tree_function(costs, paths, edges):
-    """Return the minimum costs to nodes in the graph.
-    """
+    """Return the minimum costs to nodes in the graph."""
     # FIXME: coordinates are derived from node string, should be derived from
     # node metadata (add node coordinates upstream in entwiner).
     return {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [float(n) for n in node.split(",")],
-                },
-                "properties": {"cost": cost},
-            }
-            for node, cost in costs.items()
-        ],
+        "paths": list(paths),
+        "edges": {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": edge.pop("_geometry"),
+                    "properties": edge,
+                }
+                for edge in edges
+            ],
+        },
+        "node_costs": {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            float(n.strip("(").strip(")")) for n in node.split(",")
+                        ],
+                    },
+                    "properties": {"cost": cost},
+                }
+                for node, cost in costs.items()
+            ],
+        },
     }

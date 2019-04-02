@@ -37,14 +37,17 @@ def run_app(path, host="localhost", port=8000, add_headers=None, debug=False):
             # TODO: Set a
             g.failed_graph = True
 
-    @app.teardown_request
+    @app.after_request
     def after_request(response):
+        for header, value in add_headers:
+            response.headers[header] = value
+        return response
+
+    @app.teardown_request
+    def teardown_request(exception):
         # TODO: add CORS info?
         g.G.sqlitegraph.conn.close()
         g.G = None
-        # FIXME: add headers to appropriate context manager in Flask 1.0
-        # for header in add_headers:
-        #     response.headers.add(*header)
 
     for profile in profiles:
         add_views(app, profile)
