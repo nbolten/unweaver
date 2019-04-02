@@ -32,13 +32,6 @@ def shortest_path_tree(
         G, sources, cutoff=maxCost, weight=cost_function
     )
 
-    if len(sources) > 1:
-        # Multiple start points because origin was an edge - add any initial costs to
-        # final points
-        for target, path in paths.items():
-            origin = path[0]
-            distances[target] += candidate[origin]["seed_cost"]
-
     # Create costs and unique edges (tree edges) data structure
     costs = distances
 
@@ -49,6 +42,25 @@ def shortest_path_tree(
     # FIXME: entwiner should leverage a 'get an nbunch' method so that this requires
     # only one SQL query.
     edges = (dict(G[u][v]) for u, v in edge_ids)
+
+    if len(sources) > 1:
+        # Multiple start points because origin was an edge - add any initial costs to
+        # final points
+        for graph_node, c in candidate.items():
+            pseudo_node = "({}, {})".format(*c["edge"]["_geometry"]["coordinates"][0])
+            c["pseudo_node"] = pseudo_node
+
+        for target, path in paths.items():
+            origin = path[0]
+            # Add initial costs associated with the "half edges" at the starting point.
+            distances[target] += candidate[origin]["seed_cost"]
+            # Add initial "half edges" to paths
+            path = [candidate[path[0]]["pseudo_node"]] + path
+
+        # Add initial half edges
+        edges = itertools.chain(
+            [c["edge"] for graph_node, c in candidate.items()], edges
+        )
 
     # Interpolate at the fringe - estimate the actual reachable positions just past the
     # default shortest-path fringe to reach the actual "maxCost".
@@ -89,7 +101,7 @@ def fringe(G, paths, distances, cost_function, maxCost):
             fringe_edge = copy.deepcopy(edge)
             fringe_edge["_geometry"] = mapping(cut(geom, interpolate_distance)[0])
             fringe_point = geom.interpolate(interpolate_distance)
-            fringe_node = ", ".join([str(n) for n in fringe_point.coords])
+            fringe_node = "({}, {})".format(*list(fringe_point.coords)[0])
             fringe_edge["_v"] = fringe_node
 
             # Update paths and edges
