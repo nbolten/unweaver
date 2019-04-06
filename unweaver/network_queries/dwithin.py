@@ -80,6 +80,7 @@ def candidates_dwithin(
 
     def new_edge(geom, edge):
         # TODO: Any way to avoid using `copy`?
+        # TODO: Use real length calculation
         if "length" in edge:
             length = edge["length"] * (geom.length / edge["_geometry"].length)
         else:
@@ -109,8 +110,10 @@ def candidates_dwithin(
 
             if is_destination:
                 reverse_edge(new_edges[1])
+                new_edges[0]["_u"] = edge["_v"]
             else:
                 reverse_edge(new_edges[0])
+                new_edges[0]["_v"] = edge["_u"]
 
             return {
                 "type": "edge",
