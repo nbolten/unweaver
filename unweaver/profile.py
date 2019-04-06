@@ -20,8 +20,8 @@ class ProfileArg(Schema):
 class ProfileSchema(Schema):
     name = fields.Str(required=True)
     args = fields.List(fields.Nested(ProfileArg))
-    cost_function = fields.Str(required=True)
-    directions = fields.Str(required=True)
+    cost_function = fields.Str()
+    directions = fields.Str()
 
     def get_cost_function(self, obj):
         # Is there such thing as the opposite of eval?
@@ -47,14 +47,22 @@ class ProfileSchema(Schema):
         else:
             path = self.context["working_path"]
 
-        cost_function_path = os.path.join(path, data["cost_function"])
-        cost_function = load_function_from_file(
-            cost_function_path, "costs", "cost_fun_generator"
-        )
-        directions_path = os.path.join(path, data["directions"])
-        directions = load_function_from_file(
-            directions_path, "directions", "directions"
-        )
+        if "cost_function" in data:
+            cost_function_path = os.path.join(path, data["cost_function"])
+            cost_function = load_function_from_file(
+                cost_function_path, "costs", "cost_fun_generator"
+            )
+        else:
+            cost_function = None
+
+        if "directions" in data:
+            directions_path = os.path.join(path, data["directions"])
+            directions = load_function_from_file(
+                directions_path, "directions", "directions"
+            )
+        else:
+            directions = None
+
         profile_args = {
             **data,
             "cost_function": cost_function,
@@ -65,11 +73,14 @@ class ProfileSchema(Schema):
 
 
 class Profile:
-    def __init__(self, name, args, cost_function, directions):
+    def __init__(self, name, args=None, cost_function=None, directions=None):
         self.name = name
-        self.args = args
-        self.cost_function_generator = cost_function
-        self.directions = directions
+        if args is not None:
+            self.args = args
+        if cost_function is not None:
+            self.cost_function_generator = cost_function
+        if directions is not None:
+            self.directions = directions
 
 
 def load_function_from_file(path, module_name, funcname):

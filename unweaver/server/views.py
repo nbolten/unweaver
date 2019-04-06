@@ -18,7 +18,10 @@ def add_directions_view(app, profile):
     # TODO: validate profile name - must be url path-compatible
     url = "/directions/{}.json".format(profile.name)
     # TODO: do any kind of input validation (at least handle errors)
-    arg_schema = {arg["name"]: arg["type"] for arg in profile.args}
+    arg_schema = {}
+    if hasattr(profile, "args"):
+        for arg in profile.args:
+            arg_schema[arg["name"]] = arg["type"]
     arg_schema["lon1"] = fields.Float()
     arg_schema["lat1"] = fields.Float()
     arg_schema["lon2"] = fields.Float()
@@ -68,7 +71,10 @@ def add_directions_view(app, profile):
 def add_shortest_paths_view(app, profile):
     url = "/shortest_paths/{}.json".format(profile.name)
 
-    arg_schema = {arg["name"]: arg["type"] for arg in profile.args}
+    arg_schema = {}
+    if hasattr(profile, "args"):
+        for arg in profile.args:
+            arg_schema[arg["name"]] = arg["type"]
     arg_schema["lon"] = fields.Float()
     arg_schema["lat"] = fields.Float()
     arg_schema["maxCost"] = fields.Float()
@@ -127,7 +133,10 @@ def add_shortest_paths_view(app, profile):
 def add_reachable_view(app, profile):
     url = "/reachable/{}.json".format(profile.name)
 
-    arg_schema = {arg["name"]: arg["type"] for arg in profile.args}
+    arg_schema = {}
+    if hasattr(profile, "args"):
+        for arg in profile.args:
+            arg_schema[arg["name"]] = arg["type"]
     arg_schema["lon"] = fields.Float()
     arg_schema["lat"] = fields.Float()
     arg_schema["maxCost"] = fields.Float()
@@ -290,7 +299,9 @@ def get_reachable(G, lon, lat, cost_function, reachable_function, max_cost):
 
 def default_cost_function_generator():
     def cost_function(u, v, d):
-        return d["_length"]
+        # FIXME: "length" is not guaranteed to exist? Update `entwiner` to calculate
+        # a _length attribute for all edges?
+        return d.get("length", None)
 
     return cost_function
 
