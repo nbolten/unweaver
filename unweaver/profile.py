@@ -63,24 +63,9 @@ class ProfileSchema(Schema):
         else:
             directions = None
 
-        profile_args = {
-            **data,
-            "cost_function": cost_function,
-            "directions": directions,
-        }
+        profile = {**data, "cost_function": cost_function, "directions": directions}
 
-        return Profile(**profile_args)
-
-
-class Profile:
-    def __init__(self, name, args=None, cost_function=None, directions=None):
-        self.name = name
-        if args is not None:
-            self.args = args
-        if cost_function is not None:
-            self.cost_function_generator = cost_function
-        if directions is not None:
-            self.directions = directions
+        return profile
 
 
 def load_function_from_file(path, module_name, funcname):
