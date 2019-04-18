@@ -15,21 +15,25 @@ def reachable_view(view_args, cost_function, reachable_function):
     )
 
     if candidates is None:
-        return {
-            "status": "InvalidWaypoint",
-            "msg": "No on-graph start point from given location.",
-            "status_data": {"index": -1},
-        }
+        return jsonify(
+            {
+                "status": "InvalidWaypoint",
+                "msg": "No on-graph start point from given location.",
+                "status_data": {"index": -1},
+            }
+        )
 
     candidate = _choose_candidate(candidates, cost_function)
 
     # TODO: unique message for this case?
     if candidate is None:
-        return {
-            "status": "InvalidWaypoint",
-            "msg": "No on-graph start point from given location.",
-            "status_data": {"index": -1},
-        }
+        return jsonify(
+            {
+                "status": "InvalidWaypoint",
+                "msg": "No on-graph start point from given location.",
+                "status_data": {"index": -1},
+            }
+        )
 
     costs, edges = reachable(g.G, candidate, cost_function, max_cost)
 
@@ -38,7 +42,7 @@ def reachable_view(view_args, cost_function, reachable_function):
         # FIXME: pseudo_node attr has tuple braces (), is not identical to other IDs
         origin_id = next(iter(candidate.values()))["pseudo_node"][1:-1]
     else:
-        origin_id = next(iter(candidate.keys()))["node"]
+        origin_id = next(iter(candidate.keys()))
 
     origin_coords = [float(n) for n in origin_id.split(", ")]
     origin = {

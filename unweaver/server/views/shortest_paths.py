@@ -15,21 +15,25 @@ def shortest_paths_view(view_args, cost_function, shortest_paths_function):
     )
 
     if candidates is None:
-        return {
-            "status": "InvalidWaypoint",
-            "msg": "No on-graph start point from given location.",
-            "status_data": {"index": -1},
-        }
+        return jsonify(
+            {
+                "status": "InvalidWaypoint",
+                "msg": "No on-graph start point from given location.",
+                "status_data": {"index": -1},
+            }
+        )
 
     candidate = _choose_candidate(candidates, cost_function)
 
     # TODO: unique message for this case?
     if candidate is None:
-        return {
-            "status": "InvalidWaypoint",
-            "msg": "No on-graph start point from given location.",
-            "status_data": {"index": -1},
-        }
+        return jsonify(
+            {
+                "status": "InvalidWaypoint",
+                "msg": "No on-graph start point from given location.",
+                "status_data": {"index": -1},
+            }
+        )
 
     costs, paths, edges = shortest_paths(g.G, candidate, cost_function, max_cost)
 
