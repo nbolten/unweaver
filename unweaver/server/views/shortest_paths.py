@@ -33,6 +33,20 @@ def shortest_paths_view(view_args, cost_function, shortest_paths_function):
 
     costs, paths, edges = shortest_paths(g.G, candidate, cost_function, max_cost)
 
-    processed_result = shortest_paths_function(costs, paths, edges)
+    if len(candidate) > 1:
+        # Was an edge - extract the pseudonode
+        # FIXME: pseudo_node attr has tuple braces (), is not identical to other IDs
+        origin_id = next(iter(candidate.values()))["pseudo_node"][1:-1]
+    else:
+        origin_id = next(iter(candidate.keys()))["node"]
+
+    origin_coords = [float(n) for n in origin_id.split(", ")]
+    origin = {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": origin_coords},
+        "properties": {},
+    }
+
+    processed_result = shortest_paths_function(origin, costs, paths, edges)
 
     return jsonify(processed_result)
