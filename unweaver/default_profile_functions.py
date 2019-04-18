@@ -16,11 +16,12 @@ def directions_function(origin, destination, cost, nodes, edges):
     }
 
 
-def shortest_paths_function(costs, paths, edges):
+def shortest_paths_function(origin, costs, paths, edges):
     """Return the minimum costs to nodes in the graph."""
     # FIXME: coordinates are derived from node string, should be derived from
     # node metadata (add node coordinates upstream in entwiner).
     return {
+        "origin": origin,
         "paths": list(paths),
         "edges": {
             "type": "FeatureCollection",
@@ -52,7 +53,7 @@ def shortest_paths_function(costs, paths, edges):
     }
 
 
-def reachable_function(costs, edges):
+def reachable_function(origin, costs, edges):
     """Return the total extent of reachable edges."""
     # FIXME: coordinates are derived from node string, should be derived from
     # node metadata (add node coordinates upstream in entwiner).
@@ -72,6 +73,7 @@ def reachable_function(costs, edges):
         seen.add(edge_id)
 
     return {
+        "origin": origin,
         "edges": {
             "type": "FeatureCollection",
             "features": [
