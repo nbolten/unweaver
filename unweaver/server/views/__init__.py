@@ -89,6 +89,14 @@ def add_views(app, profile):
         "reachable", default_profile_functions.reachable_function
     )
 
+    if profile["precalculate"]:
+        weight_column = "_weight_{}".format(profile["name"])
+
+        def precalculated_generator():
+            return lambda u, v, d: d.get(weight_column, None)
+
+        cost_function_generator = precalculated_generator
+
     add_view(
         app,
         "directions",
