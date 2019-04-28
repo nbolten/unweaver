@@ -1,4 +1,5 @@
 import importlib.util
+from functools import partial
 import os
 
 
@@ -18,10 +19,12 @@ class ProfileArg(Schema):
 
 
 class ProfileSchema(Schema):
-    name = fields.Str(required=True)
     args = fields.List(fields.Nested(ProfileArg))
     cost_function = fields.Str()
     directions = fields.Str()
+    name = fields.Str(required=True)
+    precalculate = fields.Boolean()
+    static = fields.Dict(keys=fields.Str(), values=fields.Field(), required=False)
 
     def get_cost_function(self, obj):
         # Is there such thing as the opposite of eval?
@@ -52,6 +55,9 @@ class ProfileSchema(Schema):
             cost_function = load_function_from_file(
                 cost_function_path, "costs", "cost_fun_generator"
             )
+            if "static" in data:
+                # Apply static arguments
+                cost_function = partial(cost_function, **data["static"])
         else:
             cost_function = None
 
@@ -63,7 +69,14 @@ class ProfileSchema(Schema):
         else:
             directions = None
 
-        profile = {**data, "cost_function": cost_function, "directions": directions}
+        precalculate = data.get("precalculate", False)
+
+        profile = {
+            **data,
+            "cost_function": cost_function,
+            "directions": directions,
+            "precalculate": precalculate,
+        }
 
         return profile
 

@@ -1,8 +1,9 @@
 """unweaver CLI."""
 import click
 
-from unweaver.server import run_app
 from unweaver.build import build_graph
+from unweaver.server import run_app
+from unweaver.weight import precalculate_weights
 
 
 @click.group()
@@ -18,6 +19,16 @@ def build(directory, changes_sign):
     # TODO: catch errors in starting server
     # TODO: spawn process?
     build_graph(directory, changes_sign=changes_sign)
+    click.echo("Done.")
+
+
+@unweaver.command()
+@click.argument("directory", type=click.Path("r"))
+def weight(directory):
+    click.echo("Calculating static weights...")
+    # TODO: catch errors in starting server
+    # TODO: spawn process?
+    precalculate_weights(directory)
     click.echo("Done.")
 
 
