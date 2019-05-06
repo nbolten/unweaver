@@ -11,7 +11,7 @@ unweaver = "unweaver:cli.unweaver"
 [tool.poetry.dependencies]
 python = "^3.6"
 flask = "^1.0"
-webargs = "^5.1"
+webargs = "^5.3"
 click = "^7.0"
 entwiner = {git = "https://github.com/nbolten/entwiner.git", rev = "15296f2c0facf9f1491d025862a1b2f71cba990b"}
 shapely = "^1.6"
