@@ -79,4 +79,9 @@ def shortest_paths(G, candidate, cost_function, max_cost=None):
 
         edges = itertools.chain(half_edges, edges)
 
-    return distances, paths, edges
+    # Create nodes dictionary that contains both cost data and node attributes
+    nodes = {}
+    for node_id, distance in distances.items():
+        nodes[node_id] = {**G.node[node_id], "cost": distance}
+
+    return nodes, paths, edges

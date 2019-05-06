@@ -15,11 +15,6 @@ db. Need to either replace nx's Atlas upstream in `entwiner` or reimplement dijk
 
 ## entwiner
 
-### Node attributes
-
-Node attributes are currently ephemeral. These are useful for downstream analyses and
-filtering - make them possible.
-
 ### Edge attrs with None
 
 Edge attrs are currently fetched using sqlite3.Row, meaning if there is missing data
