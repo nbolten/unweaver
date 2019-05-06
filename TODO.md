@@ -4,9 +4,6 @@
 
 ### Handle waypoints-on-same-edge case
 
-### Finding nearest path should find nearest *valid* path subject to some constraint /
-reproducible logic. Will currently fail if infinite-cost edge is closest to query point
-
 ## Stability
 
 ### Allow the use of other servers, e.g. gunicorn
