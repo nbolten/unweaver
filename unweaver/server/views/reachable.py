@@ -35,14 +35,14 @@ def reachable_view(view_args, cost_function, reachable_function):
             }
         )
 
-    costs, edges = reachable(g.G, candidate, cost_function, max_cost)
+    nodes, edges = reachable(g.G, candidate, cost_function, max_cost)
 
     if len(candidate) > 1:
         first_edge = next(iter(candidate.values()))["edge"]
         origin_coords = first_edge["_geometry"]["coordinates"][0]
     else:
         origin_node = next(iter(candidate.keys()))
-        origin_coords = [float(n) for n in origin_node.split(", ")]
+        origin_coords = g.G.nodes[origin_node]["_geometry"]["coordinates"]
 
     origin = {
         "type": "Feature",
@@ -50,6 +50,6 @@ def reachable_view(view_args, cost_function, reachable_function):
         "properties": {},
     }
 
-    reachable_data = reachable_function(origin, costs, edges)
+    reachable_data = reachable_function(origin, nodes, edges)
 
     return jsonify(reachable_data)

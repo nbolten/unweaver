@@ -16,7 +16,7 @@ def directions_function(origin, destination, cost, nodes, edges):
     }
 
 
-def shortest_paths_function(origin, costs, paths, edges):
+def shortest_paths_function(origin, nodes, paths, edges):
     """Return the minimum costs to nodes in the graph."""
     # FIXME: coordinates are derived from node string, should be derived from
     # node metadata (add node coordinates upstream in entwiner).
@@ -39,21 +39,16 @@ def shortest_paths_function(origin, costs, paths, edges):
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [
-                            float(n.strip("(").strip(")")) for n in node.split(",")
-                        ],
-                    },
-                    "properties": {"cost": cost},
+                    "geometry": n["_geometry"],
+                    "properties": {"cost": n["cost"]},
                 }
-                for node, cost in costs.items()
+                for n in nodes.values()
             ],
         },
     }
 
 
-def reachable_function(origin, costs, edges):
+def reachable_function(origin, nodes, edges):
     """Return the total extent of reachable edges."""
     # FIXME: coordinates are derived from node string, should be derived from
     # node metadata (add node coordinates upstream in entwiner).
@@ -90,15 +85,10 @@ def reachable_function(origin, costs, edges):
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [
-                            float(n.strip("(").strip(")")) for n in node.split(",")
-                        ],
-                    },
-                    "properties": {"cost": cost},
+                    "geometry": node["_geometry"],
+                    "properties": {"cost": node["cost"]},
                 }
-                for node, cost in costs.items()
+                for node in nodes.values()
             ],
         },
     }
