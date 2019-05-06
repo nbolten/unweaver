@@ -38,13 +38,12 @@ def reachable_view(view_args, cost_function, reachable_function):
     costs, edges = reachable(g.G, candidate, cost_function, max_cost)
 
     if len(candidate) > 1:
-        # Was an edge - extract the pseudonode
-        # FIXME: pseudo_node attr has tuple braces (), is not identical to other IDs
-        origin_id = next(iter(candidate.values()))["pseudo_node"][1:-1]
+        first_edge = next(iter(candidate.values()))["edge"]
+        origin_coords = first_edge["_geometry"]["coordinates"][0]
     else:
-        origin_id = next(iter(candidate.keys()))
+        origin_node = next(iter(candidate.keys()))
+        origin_coords = [float(n) for n in origin_node.split(", ")]
 
-    origin_coords = [float(n) for n in origin_id.split(", ")]
     origin = {
         "type": "Feature",
         "geometry": {"type": "Point", "coordinates": origin_coords},

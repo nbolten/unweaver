@@ -1,7 +1,7 @@
 import copy
 import itertools
 
-from networkx.algorithms.shortest_paths import multi_source_dijkstra
+from networkx.algorithms.shortest_paths import single_source_dijkstra
 from shapely.geometry import mapping, shape
 
 from ..geo import cut
@@ -20,24 +20,34 @@ def shortest_paths(G, candidate, cost_function, max_cost=None):
     :param max_cost: Maximum weight to reach in the tree.
     :type max_cost: float
     """
-    # TODO:
-    # 1) Create separate walkshed function, have it fill in internal gaps, dedupe and
-    # account for 'overlaps' during extension: if you can reach 60% down a sidewalk on
-    # each direction, should just include one whole one.
-    # 2) Tree should not dedupe: it's really showing all the paths. Create a new data
-    # structure (e.g. one FeatureCollection per path?) that represents each path.
     sources = candidate.keys()
-    distances, paths = multi_source_dijkstra(
-        G, sources, cutoff=max_cost, weight=cost_function
-    )
 
-    # Create costs and unique edges (tree edges) data structure
-    costs = distances
+    distances = {}
+    paths = {}
+    for node, c in candidate.items():
+        # Get shortest path distances (and associated paths) up to maximum cost
+        _distances, _paths = single_source_dijkstra(
+            G, node, cutoff=max_cost, weight=cost_function
+        )
 
-    # Unique edges
+        # Add 'seed' costs, if applicable, and throw away any false positives that
+        # appeared due to not originally accounting for the off-graph start point cost
+        for reached_node, cost in _distances.items():
+            if "seed_cost" in c:
+                cost = cost + c["seed_cost"]
+
+            if cost > max_cost:
+                continue
+
+            if reached_node not in distances or distances[reached_node] > cost:
+                distances[reached_node] = cost
+                paths[reached_node] = _paths[reached_node]
+
+    # Extract unique edges
     edge_ids = list(
         set([(u, v) for path in paths.values() for u, v in zip(path, path[1:])])
     )
+
     # FIXME: entwiner should leverage a 'get an nbunch' method so that this requires
     # only one SQL query.
     def edge_generator(G, edge_ids):
@@ -50,27 +60,23 @@ def shortest_paths(G, candidate, cost_function, max_cost=None):
     edges = edge_generator(G, edge_ids)
 
     if len(sources) > 1:
-        # Multiple start points because origin was an edge - add any initial costs to
-        # final points
-        for graph_node, c in candidate.items():
-            pseudo_node = "({}, {})".format(*c["edge"]["_geometry"]["coordinates"][0])
-            c["pseudo_node"] = pseudo_node
-
-        for target, path in paths.items():
-            origin = path[0]
-            # Add initial costs associated with the "half edges" at the starting point.
-            new_path_cost = distances[target] + candidate[origin]["seed_cost"]
-            if new_path_cost > max_cost:
-                # Shortest-path search went too far, since it didn't know about
-                # initial costs.
-                continue
-            distances[target] = new_path_cost
-            # Add initial "half edges" to paths
-            path = [candidate[path[0]]["pseudo_node"]] + path
-
-        # Add initial half edges
-        edges = itertools.chain(
-            [c["edge"] for graph_node, c in candidate.items()], edges
+        # Start point was an edge - add pseudonode to candidates
+        first_candidate = candidate[next(iter(candidate.keys()))]
+        pseudo_node = "{}, {}".format(
+            *first_candidate["edge"]["_geometry"]["coordinates"][0]
         )
 
-    return costs, paths, edges
+        for target, path in paths.items():
+            paths[target] = [pseudo_node] + path
+
+        # Add initial half edges
+        half_edges = []
+        for node, c in candidate.items():
+            if node in paths:
+                path = paths[node]
+                if path[1] == node:
+                    half_edges.append(c["edge"])
+
+        edges = itertools.chain(half_edges, edges)
+
+    return distances, paths, edges
