@@ -1,0 +1,5 @@
+Click==7.0
+-e git+https://github.com/nbolten/entwiner.git@45e99707d56d13f6d0085ac60cf5b741c6087354#egg=entwiner
+Flask==1.0.2
+Shapely==1.6.4.post2
+webargs==5.1.2
