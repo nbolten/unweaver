@@ -15,12 +15,6 @@ db. Need to either replace nx's Atlas upstream in `entwiner` or reimplement dijk
 
 ## entwiner
 
-### Edge attrs with None
-
-Edge attrs are currently fetched using sqlite3.Row, meaning if there is missing data
-('none' in SQLite), the key and value exist, but the value is None. This is not
-consistent with how one would use networkx - sanitize the dict-like.
-
 ## Scaling
 
 ### Write Go version
