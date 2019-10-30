@@ -39,9 +39,14 @@ def reachable(G, candidate, cost_function, max_cost):
     traveled_edges = set((e["_u"], e["_v"]) for e in edges)
     traveled_nodes = set([n for path in paths.values() for n in path])
 
+    if G.is_directed():
+        neighbor_func = G.successors
+    else:
+        neighbor_func = G.neighbors
+
     fringe_candidates = {}
     for u in traveled_nodes:
-        for v in G.successors(u):
+        for v in neighbor_func(u):
             # Ignore already-traveled edges
             if (u, v) in traveled_edges:
                 continue
