@@ -36,9 +36,9 @@ def parse_profile(path):
 
     context = {"working_path": working_path}
 
-    schema = ProfileSchema(strict=True, context=context)
+    schema = ProfileSchema(context=context)
     # TODO: add error handling
-    profile = schema.load(profile_json).data
+    profile = schema.load(profile_json)
 
     # TODO: create + return a Profile class?
     return profile
