@@ -39,7 +39,7 @@ def shortest_paths_view(view_args, cost_function, shortest_paths_function):
 
     nodes = {}
     for node_id, cost in costs.items():
-        nodes[node_id] = {**g.G.node[node_id], "cost": cost}
+        nodes[node_id] = {**g.G.nodes[node_id], "cost": cost}
 
     if len(candidate) > 1:
         first_edge = next(iter(candidate.values()))["edge"]

@@ -41,7 +41,7 @@ class ProfileSchema(Schema):
         os.path.join(self.context[path], "..", value)
 
     @post_load
-    def make_profile(self, data):
+    def make_profile(self, data, **kwargs):
         # TODO: investigate whether there's an elegant way to load the cost function
         # in a field type.
         if "working_path" not in self.context:
