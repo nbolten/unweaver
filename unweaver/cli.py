@@ -1,9 +1,13 @@
 """unweaver CLI."""
+import os
+
 import click
 
+import entwiner
 from unweaver.build import build_graph
+from unweaver.parsers import parse_profiles
 from unweaver.server import run_app
-from unweaver.weight import precalculate_weights
+from unweaver.weight import precalculate_weight
 
 
 @click.group()
@@ -25,11 +29,19 @@ def build(directory, changes_sign):
 @unweaver.command()
 @click.argument("directory", type=click.Path("r"))
 def weight(directory):
-    click.echo("Calculating static weights...")
     # TODO: catch errors in starting server
     # TODO: spawn process?
-    precalculate_weights(directory)
-    click.echo("Done.")
+    profiles = parse_profiles(directory)
+    G = entwiner.DiGraphDB(path=os.path.join(directory, "graph.db"), immutable=False)
+    n_profiles = len([p for p in profiles if p["precalculate"]])
+    n = G.size() * n_profiles
+    with click.progressbar(length=n, label="Computing static weights") as bar:
+        for profile in profiles:
+            if profile["precalculate"]:
+                weight_column = "_weight_{}".format(profile["name"])
+                precalculate_weight(
+                    G, weight_column, profile["cost_function"], counter=bar
+                )
 
 
 @unweaver.command()
