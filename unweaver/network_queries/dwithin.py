@@ -1,7 +1,7 @@
 import copy
 import json
 
-from shapely.geometry import Point, mapping
+from shapely.geometry import LineString, Point, mapping
 
 from ..constants import DWITHIN
 from ..geo import cut
@@ -104,7 +104,7 @@ def candidates_dwithin(
             return {"type": "node", "node": edge["_v"]}
         else:
             # Candidate is an edge - need to split and create "temporary node"
-            geoms = cut(geometry, distance)
+            geoms = [LineString(coords) for coords in cut(geometry, distance)]
             rowid = edge.pop("rowid")
 
             new_edges = [new_edge(geom, edge) for geom in geoms]
