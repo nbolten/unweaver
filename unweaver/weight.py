@@ -14,7 +14,7 @@ def precalculate_weights(directory):
             precalculate_weight(G, weight_column, profile["cost_function"])
 
 
-def precalculate_weight(G, weight_column, cost_function_generator):
+def precalculate_weight(G, weight_column, cost_function_generator, counter=None):
     cost_function = cost_function_generator()
     # FIXME: __setitem__ silently fails on immutable graph
 
@@ -26,6 +26,8 @@ def precalculate_weight(G, weight_column, cost_function_generator):
             G.update_edges(batch)
             batch = []
         batch.append((u, v, {weight_column: weight}))
+        if counter is not None:
+            counter.update(1)
 
     # Update any remaining edges in batch
     if batch:
