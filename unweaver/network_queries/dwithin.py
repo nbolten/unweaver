@@ -67,13 +67,14 @@ def candidates_dwithin(
     def is_start_node(distance, linestring):
         # Semantically equivalent to (edge_geometry.length - distance) == 0
         # but with floating point math considerations
-        if (linestring.length - distance) < 1e-12:
+        if distance < 1e-12:
+            # if (linestring.length - distance) < 1e-12:
             return True
 
         return False
 
     def is_end_node(distance, linestring):
-        if distance > linestring.length:
+        if distance > linestring.length or abs(distance - linestring.length) < 1e-12:
             return True
 
         return False
@@ -91,7 +92,7 @@ def candidates_dwithin(
 
         return edge
 
-    def split_edge(edge):
+    def split_edge(edge, point):
         geometry = edge["_geometry"]
         distance = geometry.project(point)
 
@@ -123,7 +124,7 @@ def candidates_dwithin(
                 ],
             }
 
-    return (split_edge(c) for c in edge_candidates[:n])
+    return (split_edge(c, point) for c in edge_candidates[:n])
 
 
 def edges_dwithin(G, lon, lat, distance, sort=False):
