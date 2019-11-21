@@ -1,8 +1,6 @@
-import copy
-
 from shapely.geometry import mapping, shape
 
-from ..geo import cut
+from ..geo import cut_off
 from .shortest_paths import shortest_paths
 
 
@@ -53,7 +51,8 @@ def reachable(G, candidate, cost_function, max_cost):
             traveled_edges.add((u, v))
 
             # Determine cost of traversal
-            edge = dict(G[u][v])
+            edge = G[u][v]
+            edge = dict(edge)
             cost = cost_function(u, v, edge)
 
             # Exclude non-traversible edges
@@ -76,23 +75,6 @@ def reachable(G, candidate, cost_function, max_cost):
                 "edge": edge,
                 "proportion": interpolate_proportion,
             }
-
-    def make_partial_edge(edge, proportion):
-        # Create edge and pseudonode
-        # TODO: use real length
-        geom = shape(edge["_geometry"])
-        geom_length = geom.length
-        interpolate_distance = proportion * geom_length
-
-        # Create a new edge with pseudo-node
-        fringe_edge = copy.deepcopy(edge)
-        fringe_edge["_geometry"] = mapping(cut(geom, interpolate_distance)[0])
-        fringe_point = geom.interpolate(interpolate_distance)
-        fringe_node_id = "{}, {}".format(*list(fringe_point.coords)[0])
-        fringe_node = {"_key": fringe_node_id, "_geometry": mapping(fringe_point)}
-        fringe_edge["_v"] = fringe_node_id
-
-        return fringe_edge, fringe_node
 
     fringe_edges = []
     seen = set()
@@ -147,7 +129,7 @@ def reachable(G, candidate, cost_function, max_cost):
         # (2) It doesn't overlap with any other partial edges
 
         # Create primary partial edge and node and append to the saved data
-        fringe_edge, fringe_node = make_partial_edge(edge, proportion)
+        fringe_edge, fringe_node = _make_partial_edge(edge, proportion)
 
         fringe_edges.append(fringe_edge)
         fringe_node_id = fringe_node.pop("_key")
@@ -159,3 +141,23 @@ def reachable(G, candidate, cost_function, max_cost):
     edges = edges + fringe_edges
 
     return nodes, edges
+
+
+def _make_partial_edge(edge, proportion):
+    # Create edge and pseudonode
+    # TODO: use real length
+    geom = shape(edge["_geometry"])
+    geom_length = geom.length
+    interpolate_distance = proportion * geom_length
+
+    # Create a new edge with pseudo-node
+    fringe_edge = {**edge}
+    # fringe_edge["_geometry"] = mapping(cut(geom, interpolate_distance)[0])
+    cut_geom = cut_off(geom, interpolate_distance)
+    fringe_edge["_geometry"] = {"type": "LineString", "coords": cut_geom}
+    fringe_point = geom.interpolate(interpolate_distance)
+    fringe_node_id = "{}, {}".format(*list(fringe_point.coords)[0])
+    fringe_node = {"_key": fringe_node_id, "_geometry": mapping(fringe_point)}
+    fringe_edge["_v"] = fringe_node_id
+
+    return fringe_edge, fringe_node
