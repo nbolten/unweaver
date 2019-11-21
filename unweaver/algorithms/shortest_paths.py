@@ -4,8 +4,6 @@ import itertools
 from networkx.algorithms.shortest_paths import single_source_dijkstra
 from shapely.geometry import mapping, shape
 
-from ..geo import cut
-
 
 def shortest_paths(G, candidate, cost_function, max_cost=None):
     """Find the shortest paths to on-graph nodes starting at a given edge/node, subject
