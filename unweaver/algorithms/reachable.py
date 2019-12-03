@@ -44,6 +44,11 @@ def reachable(G, candidate, cost_function, max_cost):
 
     fringe_candidates = {}
     for u in traveled_nodes:
+        if u not in G:
+            # For some reason, this only happens to the in-memory graph: the "pseudo"
+            # node created in paths that start along an edge remains and of course does
+            # not exist in the true graph. Investigate: FIXME!
+            continue
         for v in neighbor_func(u):
             # Ignore already-traveled edges
             if (u, v) in traveled_edges:
