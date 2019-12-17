@@ -2,9 +2,10 @@
 import os
 
 import click
+import fiona
 
 import entwiner
-from unweaver.build import build_graph
+from unweaver.build import build_graph, get_layers_paths
 from unweaver.parsers import parse_profiles
 from unweaver.server import run_app
 from unweaver.weight import precalculate_weight
@@ -17,12 +18,27 @@ def unweaver():
 
 @unweaver.command()
 @click.argument("directory", type=click.Path("r"))
+@click.option("--precision", default=7)
 @click.option("--changes-sign", multiple=True)
-def build(directory, changes_sign):
-    click.echo("Building graph...")
+def build(directory, precision, changes_sign):
+    click.echo("Estimating feature count...")
     # TODO: catch errors in starting server
     # TODO: spawn process?
-    build_graph(directory, changes_sign=changes_sign)
+
+    layers_paths = get_layers_paths(directory)
+
+    n = 0
+    for path in layers_paths:
+        with fiona.open(path) as c:
+            n += len(c)
+    # Two edges per feature - forward and reverse
+    n *= 2
+
+    with click.progressbar(length=n, label="Importing features") as bar:
+        build_graph(
+            directory, precision=precision, changes_sign=changes_sign, counter=bar
+        )
+
     click.echo("Done.")
 
 
