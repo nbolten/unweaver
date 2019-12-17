@@ -35,7 +35,7 @@ def build_graph(path, precision=7, changes_sign=None, counter=None):
     for path in paths:
         builder.add_edges_from(path, counter=counter)
 
-    builder.finalize_db()
+    builder.finalize_db(db_path)
 
     return builder.G
 
