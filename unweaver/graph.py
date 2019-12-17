@@ -19,47 +19,6 @@ def get_graph(base_path):
     return entwiner.DiGraphDB(path=db_path, immutable=True)
 
 
-def edges_dwithin(G, lon, lat, distance):
-    """Finds edges within some distance of a point.
-
-    :param G: entwiner DiGraph instance.
-    :type G: entwiner.DiGraphDB
-    :param lon: The longitude of the query point.
-    :type lon: float
-    :param lat: The latitude of the query point.
-    :type lat: float
-    :param distance: distance from point to search ('DWithin').
-    :param distance: float
-
-    """
-    # TODO: use legit distance and/or projected data, not lon-lat
-    rtree_sql = """
-        SELECT rowid
-          FROM SpatialIndex
-         WHERE f_table_name = 'edges'
-           AND search_frame = BuildMbr(?, ?, ?, ?, 4326)
-    """
-
-    bbox = [lon - distance, lat - distance, lon + distance, lat + distance]
-
-    index_query = G.sqlitegraph.execute(rtree_sql, bbox)
-    rowids = [str(r["rowid"]) for r in index_query]
-
-    # TODO: put fast rowid-based lookup in G.sqlitegraph object.
-    query = G.sqlitegraph.execute(
-        """
-        SELECT rowid, *, AsGeoJSON(_geometry) _geometry
-          FROM edges
-         WHERE rowid IN ({})
-    """.format(
-            ", ".join(rowids)
-        )
-    )
-    rows = [{**dict(r), "_geometry": shape(json.loads(r["_geometry"]))} for r in query]
-
-    return rows
-
-
 # TODO: consider an object-oriented / struct-ie approach? Lots of data reuse.
 def waypoint_candidates(
     G, lon, lat, n, is_destination=False, dwithin=DWITHIN, invert=None, flip=None
@@ -112,7 +71,7 @@ def waypoint_candidates(
     # TODO: this is just a hack for proper nearest-neighbors functionality.
     # Implement priority queue-based "true nearest neighbors" idea inspired by rtree
     # implementations.
-    edge_candidates = edges_dwithin(G, lon, lat, dwithin)
+    edge_candidates = G.edges_dwithin(lon, lat, dwithin)
     edge_candidates.sort(key=lambda r: r["_geometry"].distance(point))
 
     def split_edge(edge):
