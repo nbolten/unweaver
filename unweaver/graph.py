@@ -16,7 +16,7 @@ DWITHIN = 5e-4
 def get_graph(base_path):
     db_path = os.path.join(base_path, "graph.db")
 
-    return entwiner.DiGraphDB(path=db_path, immutable=True)
+    return entwiner.DiGraphDBView(path=db_path)
 
 
 # TODO: consider an object-oriented / struct-ie approach? Lots of data reuse.

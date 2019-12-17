@@ -48,7 +48,7 @@ def weight(directory):
     # TODO: catch errors in starting server
     # TODO: spawn process?
     profiles = parse_profiles(directory)
-    G = entwiner.DiGraphDB(path=os.path.join(directory, "graph.db"), immutable=False)
+    G = entwiner.DiGraphDB(path=os.path.join(directory, "graph.db"))
     n_profiles = len([p for p in profiles if p["precalculate"]])
     n = G.size() * n_profiles
     with click.progressbar(length=n, label="Computing static weights") as bar:
