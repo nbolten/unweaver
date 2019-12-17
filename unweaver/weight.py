@@ -7,7 +7,7 @@ from .parsers import parse_profiles
 
 def precalculate_weights(directory):
     profiles = parse_profiles(directory)
-    G = entwiner.DiGraphDB(path=os.path.join(directory, "graph.db"), immutable=False)
+    G = entwiner.DiGraphDB(path=os.path.join(directory, "graph.db"))
     for profile in profiles:
         if profile["precalculate"]:
             weight_column = "_weight_{}".format(profile["name"])
