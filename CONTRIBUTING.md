@@ -1,18 +1,31 @@
-# Contributing
+# Contributing to `unweaver`
 
-## Dev setup
+Entwiner is developed using [`poetry`](https://python-poetry.org/docs/pyproject/). Most
+of the development setup can be obtained by cloning this repository and running `poetry
+install`.
 
-- `poetry`: `unweaver` uses the `poetry` library to manage dependencies, release, and other parts
-of package management. Please use `poetry` if you plan on making contributions that
-involve adding new Python dependencies. `poetry` will also make it very easy for you to
-get up and running with exactly the right packages: just use `poetry install`.
+## Pre-commit hooks
 
-- `black`: `unweaver` uses the `black` autoformatter to manage style formatter. The
-best part of using `black` is that you don't have to worry about how you personally
-style your code while writing: `black` will make it contribution-ready for you.
+Style and `setup.py` file generation are handled using `pre-commit` hooks.
 
-- `pre-commit`: `pre-commit` will automatically run `black` for every commit you make,
-ensuring that you never have to worry about style formatting. It will be installed
-already if you used `poetry` to install the dev depencies. Just run `pre-commit
-install` one time in the project directory. If you're using `poetry`, make sure to use
-the correct environment by running `poetry run pre-commit install`.
+To enable the hooks registered in this repository, run
+`poetry run pre-commit install`.
+
+### Code style
+
+The `unweaver` package is developed using the [`black`](https://github.com/psf/black)
+autoformatter. `black` is automaticaly installed with `poetry install`.
+
+### Generating a setup.py file
+
+`unweaver` includes a `setup.py` file for legacy build support. As of writing,
+`poetry` does not yet have a native way to directly manage a `setup.py` file, so
+`unweaver` uses the [`dephell`](https://dephell.org) tool. For a variety of reasons
+(including depending on pre-alpha libraries), `dephell` should be installed globally
+and independently of your develpment setup, including `poetry`'s virtual environments.
+
+### Generating requirements.txt files
+
+For legacy purposes, requirements.txt and requirements-dev.txt files are automatically
+generated using `poetry`. No setup is required if you installed your environment using
+`poetry install`.
