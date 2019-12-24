@@ -1,6 +1,23 @@
 repos:
 -   repo: https://github.com/ambv/black
-    rev: stable
+    rev: 19.10b0
     hooks:
     - id: black
       language_version: python3.6
+      files: "^./setup.py"
+-   repo: https://github.com/mverteuil/precommit-dephell
+    rev: d62e4fd01b6616a673d2305d6eb0f2bd45556996
+    hooks:
+    - id: dephell
+-   repo: local
+    hooks:
+    - id: export_requirements
+      name: export_requirements
+      entry: "poetry export -f requirements.txt > requirements.txt"
+      language: system
+      files: "./requirements.txt"
+    - id: export_dev_requirements
+      name: export_dev_requirements
+      entry: "poetry export --dev -f requirements.txt > requirements-dev.txt"
+      language: system
+      files: "./requirements-dev.txt"
