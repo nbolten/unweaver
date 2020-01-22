@@ -33,7 +33,7 @@ setup(
         'shapely==1.*,>=1.6.0', 'webargs==5.*,>=5.3.0'
     ],
     dependency_links=[
-        'git+https://github.com/nbolten/entwiner.git@fd9c1af#egg=entwiner'
+        'git+https://github.com/nbolten/entwiner.git@f0f32d0#egg=entwiner'
     ],
     extras_require={
         "dev": [

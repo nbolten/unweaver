@@ -1,5 +1,4 @@
 import copy
-import json
 import os
 
 import entwiner
@@ -71,40 +70,15 @@ def waypoint_candidates(
     # TODO: this is just a hack for proper nearest-neighbors functionality.
     # Implement priority queue-based "true nearest neighbors" idea inspired by rtree
     # implementations.
-    edge_candidates = G.edges_dwithin(lon, lat, dwithin)
-    edge_candidates.sort(key=lambda r: r["_geometry"].distance(point))
+    # TODO: directly extract nodes as well?
+    edge_candidates = G.edges_dwithin(lon, lat, dwithin, sort=True)
 
-    def split_edge(edge):
-        geometry = edge["_geometry"]
-        distance = geometry.project(point)
+    for i, c in enumerate(edge_candidates):
+        if (i + 1) > n:
+            break
+        yield create_temporary_node(c, point, is_destination=is_destination, invert=invert, flip=flip)
 
-        if is_start_node(distance, geometry):
-            # We're at the start of an edge - so we're already on the graph!
-            return {"type": "node", "node": edge["_u"]}
-        elif is_end_node(distance, geometry):
-            # We're at the end of an edge - so we're already on the graph!
-            return {"type": "node", "node": edge["_v"]}
-        else:
-            # Candidate is an edge - need to split and create "temporary node"
-            geoms = cut(geometry, distance)
-            rowid = edge.pop("rowid")
-
-            new_edges = [new_edge(geom, edge) for geom in geoms]
-
-            if is_destination:
-                reverse_edge(new_edges[1])
-            else:
-                reverse_edge(new_edges[0])
-
-            return {
-                "type": "edge",
-                "edges": [
-                    {"node": edge["_u"], "half_edge": new_edges[0]},
-                    {"node": edge["_v"], "half_edge": new_edges[1]},
-                ],
-            }
-
-    return (split_edge(c) for c in edge_candidates[:n])
+    # return (create_temporary_node(c, point) for c in edge_candidates[:n])
 
 
 def reverse_edge(edge, invert=None, flip=None):
@@ -146,14 +120,68 @@ def is_end_node(distance, linestring):
     return False
 
 
-def new_edge(geom, edge):
+def new_edge(geom, d):
     # TODO: Any way to avoid using `copy`?
-    if "length" in edge:
-        length = edge["length"] * (geom.length / edge["_geometry"].length)
-    else:
-        length = edge["length"]
-    edge = copy.copy(edge)
-    edge["_geometry"] = mapping(geom)
-    edge["length"] = length
+    d = copy.copy(d)
 
-    return edge
+    if "length" in d:
+        orig_geom = shape(d["_geometry"])
+        d["length"] = d["length"] * (geom.length / orig_geom.length)
+
+    d["_geometry"] = mapping(geom)
+
+    return d
+
+
+# TODO: remove 'n' attribute, it's not used here anyways
+class ProjectedNode:
+    def __init__(self, n, geometry, edge1=None, edge2=None, is_destination=False):
+        self.n = n
+        self.geometry = geometry
+        self.edge1 = edge1
+        self.edge2 = edge2
+        self.is_destination = is_destination
+
+
+def create_temporary_node(edge, point, is_destination=False, invert=False, flip=False):
+    u, v, d = edge
+    geometry = d["_geometry"]
+    geometry = shape(geometry)
+    distance = geometry.project(point)
+
+    if is_start_node(distance, geometry):
+        # We're at the start of an edge - so we're already on the graph!
+        return ProjectedNode(u, point, is_destination=is_destination)
+
+    if is_end_node(distance, geometry):
+        # We're at the end of an edge - so we're already on the graph!
+        return ProjectedNode(v, point, is_destination=is_destination)
+
+    # Candidate is an edge - need to split and create temporary node + edge info
+    try:
+        geom1, geom2 = cut(geometry, distance)
+    except:
+        # TODO: make a specific exception for this case
+        raise ValueError
+
+    geom1 = LineString(geom1)
+    geom2 = LineString(geom2)
+
+    # Create copies of the edge data with new geometries
+    d1 = new_edge(geom1, d)
+    d2 = new_edge(geom2, d)
+
+    # Origin node should have outgoing edges, destination incoming.
+    if is_destination:
+        reverse_edge(d2, invert=invert, flip=flip)
+    else:
+        reverse_edge(d1, invert=invert, flip=flip)
+
+    if is_destination:
+        edge1 = (u, -1, d1)
+        edge2 = (v, -1, d2)
+    else:
+        edge1 = (-1, u, d1)
+        edge2 = (-1, v, d2)
+
+    return ProjectedNode(-1, point, edge1=edge1, edge2=edge2, is_destination=is_destination)

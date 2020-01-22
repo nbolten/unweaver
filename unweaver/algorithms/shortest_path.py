@@ -3,6 +3,8 @@ import networkx as nx
 from networkx.algorithms.shortest_paths import multi_source_dijkstra
 
 
+from ..augmented import AugmentedDiGraphDBView
+from ..graph import waypoint_candidates
 from ..network_queries import candidates_dwithin
 from ..exceptions import InvalidWaypoint
 
@@ -15,12 +17,13 @@ def waypoint_legs(G, waypoints, cost_function, invert=None, flip=None):
     pairs = zip(waypoints, waypoints[1:])
     legs = []
     for wp1, wp2 in pairs:
-        wp1_candidates = candidates_dwithin(
-            G, wp1[0], wp1[1], n=4, invert=invert, flip=flip
-        )
-        wp2_candidates = candidates_dwithin(
-            G, wp2[0], wp2[1], n=4, invert=invert, flip=flip, is_destination=True
-        )
+        # FIXME: don't invert any properties on the fly, make use of symmetry of half-edges:
+        # e.g., for edge (u, v), edge (v, u) already has the flipped/inverted properties.
+        # FIXME: handle case where starting point is on the same edge: need to change
+        # the new edges being  inserted to reference one another, e.g. connect -1 to -2
+        # and vice versa.
+        wp1_candidates = waypoint_candidates(G, wp1[0], wp1[1], n=4, invert=invert, flip=flip)
+        wp2_candidates = waypoint_candidates(G, wp2[0], wp2[1], n=4, invert=invert, flip=flip, is_destination=True)
 
         # If closest points on the graph are on edges, multiple shortest path searches
         # will be done (this is a good point for optimization in future releases) and the
@@ -56,46 +59,53 @@ def route_legs(G, legs, cost_function, invert=None, flip=None, edge_filter=None)
     :type edge_filter: callable
 
     """
+    # FIXME: written in a way that expects all waypoint nodes to have been pre-vetted
+    # to be non-None
     # TODO: Extract invertible/flippable edge attributes into the profile.
     # NOTE: Written this way to anticipate multi-waypoint routing
+    G_overlay = nx.DiGraph()
+    wp_id = -1
+    for waypoints in legs:
+        for wp in waypoints:
+            if wp.edge1 is None or wp.edge2 is None:
+                # It's a pure node that's already on-graph: skip
+                pass
+            else:
+                if wp.is_destination:
+                    edge1 = (wp.edge1[0], wp_id, wp.edge1[2])
+                    edge2 = (wp.edge2[0], wp_id, wp.edge2[2])
+                else:
+                    edge1 = (wp_id, wp.edge1[1], wp.edge1[2])
+                    edge2 = (wp_id, wp.edge2[1], wp.edge2[2])
+
+                G_overlay.add_edges_from((edge1, edge2))
+
+                wp.n = wp_id
+
+                wp_id -= 1
+
+    G_aug = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
+
     route_legs = []
     for wp1, wp2 in legs:
         routes = []
-        for to_node, to_seed in wp2.items():
-            try:
-                cost, path = multi_source_dijkstra(
-                    G,
-                    sources=[k for k, v in wp1.items()],
-                    target=to_node,
-                    weight=cost_function,
-                )
-            except nx.exception.NetworkXNoPath:
-                continue
-
-            if cost is None:
-                continue
-
-            from_node = path[0]
-            from_seed = wp1[from_node]
-            cost += from_seed["seed_cost"]
-            cost += to_seed["seed_cost"]
-
-            edges = [dict(G[u][v]) for u, v in zip(path, path[1:])]
-
-            if from_seed["type"] == "edge":
-                path = [-1] + path
-                edges = [from_seed["edge"]] + edges
-            if to_seed["type"] == "edge":
-                path += [-2]
-                edges = edges + [to_seed["edge"]]
-            routes.append((cost, path, edges))
-
+        try:
+            cost, path = multi_source_dijkstra(
+                G_aug,
+                sources=[wp1.n],
+                target=wp2.n,
+                weight=cost_function,
+            )
         # NOTE: Might want to try a new seed for waypoints instead of skipping.
-        if not routes:
+        except nx.exception.NetworkXNoPath:
             raise NoPathError("No viable path found.")
 
-        best_cost, best_path, best_edges = sorted(routes, key=lambda x: x[0])[0]
-        route_legs.append((best_cost, best_path, best_edges))
+        if cost is None:
+            raise NoPathError("No viable path found.")
+
+        edges = [dict(G_aug[u][v]) for u, v in zip(path, path[1:])]
+
+        route_legs.append((cost, path, edges))
 
     # TODO: Return multiple legs once multiple waypoints supported
     return route_legs[0]
@@ -119,32 +129,22 @@ def _choose_candidate(candidates, cost_function, edge_filter=None):
     # TODO: create a PseudoNode class and use it instead of these dictionaries
     # TODO: Separate choice logic from data synthesis, e.g. cost function
     for candidate in candidates:
-        if candidate["type"] == "node":
-            # There's no way to filter nodes right now anyways - just keep the
-            # first one.
-            return {
-                candidate["node"]: {"type": "node", "seed_cost": 0, "pseudo": False}
-            }
+        if candidate.edge1 is None or candidate.edge2 is None:
+            # The candidate is an on-graph node: no extra costs to account for, just
+            # start/end at this node during shortest path search.
+            return candidate
         else:
+            # Candidate is along an edge. Rule out if neither associated edge has
+            # non-infinite cost
             if not edge_filter(candidate):
                 continue
 
-            result = {}
-            for seed in candidate["edges"]:
-                cost = cost_function(-1, -2, seed["half_edge"])
-                if cost is None:
-                    continue
-                result[seed["node"]] = {
-                    "type": "edge",
-                    "edge": seed["half_edge"],
-                    "seed_cost": cost,
-                    "pseudo": True,
-                }
+            cost1 = cost_function(-1, -2, candidate.edge1[2])
+            cost2 = cost_function(-1, -2, candidate.edge2[2])
 
-            if not result:
-                # Both pseudo-edges were infinite cost. Try the next candidate!
+            if cost1 is None and cost2 is None:
                 continue
 
-            return result
+            return candidate
 
     return None
