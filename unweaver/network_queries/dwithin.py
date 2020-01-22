@@ -159,6 +159,7 @@ def edges_dwithin(G, lon, lat, distance, sort=False):
     rowids = [str(r["rowid"]) for r in index_query]
 
     # TODO: put fast rowid-based lookup in G.sqlitegraph object.
+    # TODO: load geometry geojson in entwiner, not here
     query = G.sqlitegraph.execute(
         """
         SELECT rowid, *, AsGeoJSON(_geometry) _geometry
