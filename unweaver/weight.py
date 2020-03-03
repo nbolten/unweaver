@@ -18,6 +18,9 @@ def precalculate_weight(G, weight_column, cost_function_generator, counter=None)
     cost_function = cost_function_generator()
     # FIXME: __setitem__ silently fails on immutable graph
 
+    # TODO: Abstract into `add_column` method for graphs?
+    G.sqlitegraph.execute(f"ALTER TABLE edges ADD COLUMN {weight_column} REAL")
+
     batch = []
     for i, (u, v, d) in enumerate(G.iter_edges()):
         # Update 100 at a time
