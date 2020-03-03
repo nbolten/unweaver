@@ -11,7 +11,7 @@ def reachable(G, candidate, cost_function, max_cost):
 
     :param G: Network graph.
     :type G: NetworkX-like Graph or DiGraph.
-    :param candidate: On-graph candidate metadata as created by candidates_dwithin.
+    :param candidate: On-graph candidate metadata as created by waypoint_candidates.
     :type candidate: dict
     :param cost_function: NetworkX-compatible weight function.
     :type cost_function: callable
