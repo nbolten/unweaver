@@ -20,9 +20,6 @@ autoformatter. `black` is automaticaly installed with `poetry install`.
 
 `unweaver` includes a `setup.py` file for legacy build support. As of writing,
 `poetry` does not yet have a native way to directly manage a `setup.py` file, so
-`unweaver` uses the [`dephell`](https://dephell.org) tool. For a variety of reasons
-(including depending on pre-alpha libraries), `dephell` should be installed globally
-and independently of your develpment setup, including `poetry`'s virtual environments.
 
 ### Generating requirements.txt files
 
