@@ -28,10 +28,6 @@ exclude = """
 )
 """
 
-# [tool.dephell.main]
-# from = {format = "poetry", path = "pyproject.toml"}
-# to = {format = "setuppy", path = "setup.py"}
-
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

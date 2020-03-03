@@ -5,10 +5,6 @@ repos:
     - id: black
       language_version: python3.6
       files: "^./setup.py"
-      # -   repo: https://github.com/mverteuil/precommit-dephell
-      #     rev: d62e4fd01b6616a673d2305d6eb0f2bd45556996
-      #     hooks:
-      #     - id: dephell
 -   repo: local
     hooks:
     - id: export_setup_py
