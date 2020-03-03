@@ -1,6 +1,6 @@
 from flask import g, jsonify
 
-from ...network_queries import candidates_dwithin
+from ...graph import waypoint_candidates
 from ...algorithms.shortest_path import _choose_candidate
 from ...algorithms.reachable import reachable
 
@@ -10,7 +10,7 @@ def reachable_view(view_args, cost_function, reachable_function):
     lat = view_args["lat"]
     max_cost = view_args["max_cost"]
 
-    candidates = candidates_dwithin(
+    candidates = waypoint_candidates(
         g.G, lon, lat, 4, is_destination=False, dwithin=5e-4
     )
 
