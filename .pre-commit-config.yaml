@@ -5,12 +5,17 @@ repos:
     - id: black
       language_version: python3.6
       files: "^./setup.py"
--   repo: https://github.com/mverteuil/precommit-dephell
-    rev: d62e4fd01b6616a673d2305d6eb0f2bd45556996
-    hooks:
-    - id: dephell
+      # -   repo: https://github.com/mverteuil/precommit-dephell
+      #     rev: d62e4fd01b6616a673d2305d6eb0f2bd45556996
+      #     hooks:
+      #     - id: dephell
 -   repo: local
     hooks:
+    - id: export_setup_py
+      name: export_setup_py
+      entry: "poetry run python ./create_setup.py"
+      language: system
+      files: "./setup.py"
     - id: export_requirements
       name: export_requirements
       entry: "poetry export -f requirements.txt > requirements.txt"
