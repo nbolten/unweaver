@@ -105,16 +105,14 @@ def reverse_edge(edge, invert=None, flip=None):
 
 
 def is_start_node(distance, linestring):
-    # Semantically equivalent to (edge_geometry.length - distance) == 0
-    # but with floating point math considerations
-    if (linestring.length - distance) < 1e-12:
+    if distance < 1e-12:
         return True
 
     return False
 
 
 def is_end_node(distance, linestring):
-    if distance > linestring.length:
+    if (linestring.length - distance) < 1e-12:
         return True
 
     return False
@@ -160,9 +158,9 @@ def create_temporary_node(edge, point, is_destination=False, invert=False, flip=
     # Candidate is an edge - need to split and create temporary node + edge info
     try:
         geom1, geom2 = cut(geometry, distance)
-    except:
+    except Exception as e:
         # TODO: make a specific exception for this case
-        raise ValueError
+        raise ValueError("Failed to cut edge associated with temporary node.")
 
     geom1 = LineString(geom1)
     geom2 = LineString(geom2)
