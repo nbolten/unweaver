@@ -1,8 +1,11 @@
 import copy
 import itertools
 
+import networkx as nx
 from networkx.algorithms.shortest_paths import single_source_dijkstra
 from shapely.geometry import mapping, shape
+
+from ..augmented import AugmentedDiGraphDBView
 
 
 def shortest_paths(G, candidate, cost_function, max_cost=None):
@@ -18,28 +21,20 @@ def shortest_paths(G, candidate, cost_function, max_cost=None):
     :param max_cost: Maximum weight to reach in the tree.
     :type max_cost: float
     """
-    sources = candidate.keys()
+    temp_edges = []
+    if candidate.edge1 is not None:
+        temp_edges.append(candidate.edge1)
+    if candidate.edge2 is not None:
+        temp_edges.append(candidate.edge2)
 
-    distances = {}
-    paths = {}
-    for node, c in candidate.items():
-        # Get shortest path distances (and associated paths) up to maximum cost
-        _distances, _paths = single_source_dijkstra(
-            G, node, cutoff=max_cost, weight=cost_function
-        )
+    if temp_edges:
+        G_overlay = nx.DiGraph()
+        G_overlay.add_edges_from(temp_edges)
+        G = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
 
-        # Add 'seed' costs, if applicable, and throw away any false positives that
-        # appeared due to not originally accounting for the off-graph start point cost
-        for reached_node, cost in _distances.items():
-            if "seed_cost" in c:
-                cost = cost + c["seed_cost"]
-
-            if cost > max_cost:
-                continue
-
-            if reached_node not in distances or distances[reached_node] > cost:
-                distances[reached_node] = cost
-                paths[reached_node] = _paths[reached_node]
+    distances, paths = single_source_dijkstra(
+        G, candidate.n, cutoff=max_cost, weight=cost_function
+    )
 
     # Extract unique edges
     edge_ids = list(
@@ -56,26 +51,6 @@ def shortest_paths(G, candidate, cost_function, max_cost=None):
             yield edge
 
     edges = edge_generator(G, edge_ids)
-
-    if len(sources) > 1:
-        # Start point was an edge - add pseudonode to candidates
-        first_candidate = candidate[next(iter(candidate.keys()))]
-        pseudo_node = "{}, {}".format(
-            *first_candidate["edge"]["_geometry"]["coordinates"][0]
-        )
-
-        for target, path in paths.items():
-            paths[target] = [pseudo_node] + path
-
-        # Add initial half edges
-        half_edges = []
-        for node, c in candidate.items():
-            if node in paths:
-                path = paths[node]
-                if path[1] == node:
-                    half_edges.append(c["edge"])
-
-        edges = itertools.chain(half_edges, edges)
 
     # Create nodes dictionary that contains both cost data and node attributes
     nodes = {}

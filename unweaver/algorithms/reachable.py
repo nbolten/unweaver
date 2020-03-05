@@ -1,5 +1,7 @@
+import networkx as nx
 from shapely.geometry import mapping, shape
 
+from ..augmented import AugmentedDiGraphDBView
 from ..geo import cut_off
 from .shortest_paths import shortest_paths
 
@@ -19,6 +21,17 @@ def reachable(G, candidate, cost_function, max_cost):
     :type max_cost: float
 
     """
+    temp_edges = []
+    if candidate.edge1 is not None:
+        temp_edges.append(candidate.edge1)
+    if candidate.edge2 is not None:
+        temp_edges.append(candidate.edge2)
+
+    if temp_edges:
+        G_overlay = nx.DiGraph()
+        G_overlay.add_edges_from(temp_edges)
+        G = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
+
     # TODO: reuse these edges - lookup of edges from graph is often slowest
     nodes, paths, edges = shortest_paths(G, candidate, cost_function, max_cost)
 
@@ -86,19 +99,10 @@ def reachable(G, candidate, cost_function, max_cost):
 
     # Don't treat origin point edge as fringe-y: each start point in the shortest-path
     # tree was reachable from the initial half-edge.
-    attempted = list(candidate.keys())
     started = list(set([path[0] for target, path in paths.items()]))
 
-    if len(attempted) > 1:
-        # Started on an edge
-        edge_1 = (attempted[0], attempted[1])
-        edge_2 = (attempted[1], attempted[0])
-        if attempted[0] in started:
-            # Treat as 'seen': we've already traversed a low-cost part of this edge
-            seen.add((attempted[0], attempted[1]))
-        if attempted[1] in started:
-            # Treat as 'seen': we've already traversed a low-cost part of this edge
-            seen.add((attempted[1], attempted[0]))
+    edge1 = candidate.edge1
+    edge2 = candidate.edge2
 
     # Adjust / remove fringe proportions based on context
     for edge_id, candidate in fringe_candidates.items():
