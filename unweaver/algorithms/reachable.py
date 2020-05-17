@@ -1,7 +1,6 @@
 import networkx as nx
 from shapely.geometry import mapping, shape
 
-from ..augmented import AugmentedDiGraphDBView
 from ..geo import cut_off
 from .shortest_paths import shortest_paths
 
@@ -21,19 +20,8 @@ def reachable(G, candidate, cost_function, max_cost):
     :type max_cost: float
 
     """
-    temp_edges = []
-    if candidate.edge1 is not None:
-        temp_edges.append(candidate.edge1)
-    if candidate.edge2 is not None:
-        temp_edges.append(candidate.edge2)
-
-    if temp_edges:
-        G_overlay = nx.DiGraph()
-        G_overlay.add_edges_from(temp_edges)
-        G = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
-
     # TODO: reuse these edges - lookup of edges from graph is often slowest
-    nodes, paths, edges = shortest_paths(G, candidate, cost_function, max_cost)
+    nodes, paths, edges = shortest_paths(G, candidate.n, cost_function, max_cost)
 
     # The shortest-path tree already contains all on-graph nodes within max_cost
     # distance. The only edges we need to add to make it the full, extended,

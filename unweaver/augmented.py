@@ -116,3 +116,30 @@ class AugmentedDiGraphDBView(nx.DiGraph):
         self._node = self.node_dict_factory()
         self._succ = self._adj = self.adjlist_outer_dict_factory()
         self._pred = AugmentedOuterPredecessorsView(_G=G, _G_overlay=G_overlay)
+
+
+def prepare_augmented(G, candidate):
+    temp_edges = []
+    if candidate.edge1 is not None:
+        temp_edges.append(candidate.edge1)
+    if candidate.edge2 is not None:
+        temp_edges.append(candidate.edge2)
+
+
+    if temp_edges:
+        G_overlay = nx.DiGraph()
+        G_overlay.add_edges_from(temp_edges)
+        for u, v, d in temp_edges:
+            # TODO: 'add_edges_from' should automatically add geometry info to nodes.
+            #       This is a workaround for the fact that it doesn't.
+            G_overlay.nodes[u]["_geometry"] = {
+                "type": "Point",
+                "coordinates": list(d["_geometry"]["coordinates"][0]),
+            }
+            G_overlay.nodes[v]["_geometry"] = {
+                "type": "Point",
+                "coordinates": list(d["_geometry"]["coordinates"][-1]),
+            }
+        G2 = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
+
+    return G2
