@@ -151,7 +151,7 @@ def _make_partial_edge(edge, proportion):
     fringe_edge = {**edge}
     # fringe_edge["_geometry"] = mapping(cut(geom, interpolate_distance)[0])
     cut_geom = cut_off(geom, interpolate_distance)
-    fringe_edge["_geometry"] = {"type": "LineString", "coords": cut_geom}
+    fringe_edge["_geometry"] = {"type": "LineString", "coordinates": cut_geom}
     fringe_point = geom.interpolate(interpolate_distance)
     fringe_node_id = "{}, {}".format(*list(fringe_point.coords)[0])
     fringe_node = {"_key": fringe_node_id, "_geometry": mapping(fringe_point)}
