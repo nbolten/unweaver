@@ -1,5 +1,7 @@
 from flask import g, jsonify
+from shapely.geometry import mapping
 
+from ...augmented import prepare_augmented
 from ...graph import waypoint_candidates
 from ...algorithms.shortest_path import _choose_candidate
 from ...algorithms.shortest_paths import shortest_paths
@@ -35,24 +37,15 @@ def shortest_paths_view(view_args, cost_function, shortest_paths_function):
             }
         )
 
-    costs, paths, edges = shortest_paths(g.G, candidate, cost_function, max_cost)
+    G_aug = prepare_augmented(g.G, candidate)
+
+    costs, paths, edges = shortest_paths(G_aug, candidate.n, cost_function, max_cost)
 
     nodes = {}
     for node_id, cost in costs.items():
-        nodes[node_id] = {**g.G.nodes[node_id], "cost": cost}
+        nodes[node_id] = {**G_aug.nodes[node_id], "cost": cost}
 
-    if len(candidate) > 1:
-        first_edge = next(iter(candidate.values()))["edge"]
-        origin_coords = first_edge["_geometry"]["coordinates"][0]
-    else:
-        origin_node = next(iter(candidate.keys()))
-        origin_coords = g.G.nodes[origin_node]["_geometry"]["coordinates"]
-
-    origin = {
-        "type": "Feature",
-        "geometry": {"type": "Point", "coordinates": origin_coords},
-        "properties": {},
-    }
+    origin = mapping(candidate.geometry)
 
     processed_result = shortest_paths_function(origin, nodes, paths, edges)
 

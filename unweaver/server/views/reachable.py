@@ -1,5 +1,7 @@
 from flask import g, jsonify
+from shapely.geometry import mapping
 
+from ...augmented import prepare_augmented
 from ...graph import waypoint_candidates
 from ...algorithms.shortest_path import _choose_candidate
 from ...algorithms.reachable import reachable
@@ -35,21 +37,10 @@ def reachable_view(view_args, cost_function, reachable_function):
             }
         )
 
-    nodes, edges = reachable(g.G, candidate, cost_function, max_cost)
+    G_aug = prepare_augmented(g.G, candidate)
 
-    if len(candidate) > 1:
-        first_edge = next(iter(candidate.values()))["edge"]
-        origin_coords = first_edge["_geometry"]["coordinates"][0]
-    else:
-        origin_node = next(iter(candidate.keys()))
-        origin_coords = g.G.nodes[origin_node]["_geometry"]["coordinates"]
-
-    origin = {
-        "type": "Feature",
-        "geometry": {"type": "Point", "coordinates": origin_coords},
-        "properties": {},
-    }
-
+    nodes, edges = reachable(G_aug, candidate, cost_function, max_cost)
+    origin = mapping(candidate.geometry)
     reachable_data = reachable_function(origin, nodes, edges)
 
     return jsonify(reachable_data)
