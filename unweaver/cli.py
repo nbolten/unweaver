@@ -65,7 +65,7 @@ def weight(directory):
 @click.option("--host", "-h", default="localhost")
 @click.option("--port", "-p", default=8000)
 @click.option("--debug", is_flag=True)
-def run(directory, host, port, debug=False):
+def serve(directory, host, port, debug=False):
     click.echo("Starting server in {}...".format(directory))
     # TODO: catch errors in starting server
     # TODO: spawn process?
