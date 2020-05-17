@@ -19,7 +19,7 @@ def add_view(
     view_args=None,
 ):
     # TODO: Could use url_for and a real Flask route template?
-    profile_name = profile["name"]
+    profile_name = profile["id"]
     url = "/{}/{}.json".format(view_name, profile_name)
 
     profile_args = {}
@@ -90,7 +90,7 @@ def add_views(app, profile):
     )
 
     if profile["precalculate"]:
-        weight_column = "_weight_{}".format(profile["name"])
+        weight_column = "_weight_{}".format(profile["id"])
 
         def precalculated_generator():
             return lambda u, v, d: d.get(weight_column, None)
