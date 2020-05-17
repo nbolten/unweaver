@@ -54,7 +54,7 @@ def weight(directory):
     with click.progressbar(length=n, label="Computing static weights") as bar:
         for profile in profiles:
             if profile["precalculate"]:
-                weight_column = "_weight_{}".format(profile["name"])
+                weight_column = "_weight_{}".format(profile["id"])
                 precalculate_weight(
                     G, weight_column, profile["cost_function"], counter=bar
                 )

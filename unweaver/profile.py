@@ -22,6 +22,7 @@ class ProfileSchema(Schema):
     args = fields.List(fields.Nested(ProfileArg))
     cost_function = fields.Str()
     directions = fields.Str()
+    id = fields.Str(required=True)
     name = fields.Str(required=True)
     precalculate = fields.Boolean()
     static = fields.Dict(keys=fields.Str(), values=fields.Field(), required=False)
