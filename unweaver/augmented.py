@@ -140,6 +140,6 @@ def prepare_augmented(G, candidate):
                 "type": "Point",
                 "coordinates": list(d["_geometry"]["coordinates"][-1]),
             }
-        G2 = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
+        G = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
 
-    return G2
+    return G
