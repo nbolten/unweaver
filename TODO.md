@@ -4,6 +4,11 @@
 
 ### Handle waypoints-on-same-edge case
 
+## Formats
+
+Add support for more formats, at least GPKG and Shapefiles. Ideally, use fiona and
+attempt to read all files in the `layers` directory.
+
 ## Stability
 
 ### Allow the use of other servers, e.g. gunicorn
