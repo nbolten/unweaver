@@ -1,0 +1,6 @@
+{
+  "id": "distance",
+  "name": "distance",
+  "cost_function": "cost-distance.py",
+  "precalculate": true
+}

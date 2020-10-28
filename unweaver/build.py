@@ -4,9 +4,8 @@ import fiona
 
 import entwiner
 
-
-class MissingLayersError(Exception):
-    pass
+from .constants import DB_PATH
+from .exceptions import MissingLayersError
 
 
 def get_layers_paths(path):
@@ -26,12 +25,14 @@ def get_layers_paths(path):
 
 
 def build_graph(path, precision=7, changes_sign=None, counter=None):
-    builder = entwiner.GraphBuilder(precision=precision, changes_sign=changes_sign)
+    builder = entwiner.GraphBuilder(
+        precision=precision, changes_sign=changes_sign
+    )
     builder.create_temporary_db()
 
     paths = get_layers_paths(path)
+    db_path = os.path.join(path, DB_PATH)
 
-    db_path = os.path.join(path, "graph.db")
     for path in paths:
         builder.add_edges_from(path, counter=counter)
 

@@ -5,6 +5,9 @@
 # Install test files
 *.egg-info
 
+# coverage file
+.coverage
+
 # Python virtual environment
 venv
 
@@ -15,4 +18,6 @@ venv
 demos
 
 # Graph builds
-*.db
+*.gpkg
+
+

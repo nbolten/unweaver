@@ -1,11 +1,10 @@
 """Function to cut Shapely LineStrings at a distance along them."""
-from shapely.geometry import LineString
 
 
 def cut(line, distance):
-    """Cuts a Shapely LineString at the stated distance. Returns a list of two new
-    LineStrings for valid inputs. If the distance is 0, negative, or longer than the
-    LineString, a list with the original LineString is produced.
+    """Cuts a Shapely LineString at the stated distance. Returns a list of two
+    new LineStrings for valid inputs. If the distance is 0, negative, or longer
+    than the LineString, a list with the original LineString is produced.
 
     :param line: LineString to cut.
     :type line: shapely.geometry.LineString
@@ -14,7 +13,7 @@ def cut(line, distance):
 
     """
     if distance <= 0.0 or distance >= line.length:
-        return [LineString(line)]
+        return list(line.coords)
     # coords = list(line.coords)
     coords = line.coords
 
@@ -32,21 +31,22 @@ def cut(line, distance):
             return [coords[:i] + [(cp.x, cp.y)], [(cp.x, cp.y)] + coords[i:]]
 
         last = p
-    # If the code reaches this point, we've hit a floating point error or something, as
-    # the total estimated distance traveled is less than the distance specified and
-    # the distance specified is less than the length of the geometry, so there's some
-    # small gap. The approach floating around online is to use linear projection to
-    # find the closest point to the given distance, but this is not robust against
-    # complex, self-intersection lines. So, instead: we just assume it's between the
-    # second to last and last point.
+    # If the code reaches this point, we've hit a floating point error or
+    # something, as the total estimated distance traveled is less than the
+    # distance specified and the distance specified is less than the length of
+    # the geometry, so there's some small gap. The approach floating around
+    # online is to use linear projection to find the closest point to the given
+    # distance, but this is not robust against complex, self-intersection
+    # lines. So, instead: we just assume it's between the second to last and
+    # last point.
     cp = line.interpolate(distance)
     return [coords[:i] + [(cp.x, cp.y)], [(cp.x, cp.y)] + coords[i:]]
 
 
 def cut_off(line, distance):
-    """Cuts a Shapely LineString at the stated distance. Returns a list of two new
-    LineStrings for valid inputs. If the distance is 0, negative, or longer than the
-    LineString, a list with the original LineString is produced.
+    """Cuts a Shapely LineString at the stated distance. Returns a list of two
+    new LineStrings for valid inputs. If the distance is 0, negative, or longer
+    than the LineString, a list with the original LineString is produced.
 
     :param line: LineString to cut.
     :type line: shapely.geometry.LineString
@@ -55,8 +55,7 @@ def cut_off(line, distance):
 
     """
     if distance <= 0.0 or distance >= line.length:
-        return [LineString(line)]
-    # coords = list(line.coords)
+        return list(line.coords)
     coords = line.coords
 
     pd = 0
@@ -73,13 +72,14 @@ def cut_off(line, distance):
             return coords[:i] + [(cp.x, cp.y)]
 
         last = p
-    # If the code reaches this point, we've hit a floating point error or something, as
-    # the total estimated distance traveled is less than the distance specified and
-    # the distance specified is less than the length of the geometry, so there's some
-    # small gap. The approach floating around online is to use linear projection to
-    # find the closest point to the given distance, but this is not robust against
-    # complex, self-intersection lines. So, instead: we just assume it's between the
-    # second to last and last point.
+    # If the code reaches this point, we've hit a floating point error or
+    # something, as the total estimated distance traveled is less than the
+    # distance specified and the distance specified is less than the length of
+    # the geometry, so there's some small gap. The approach floating around
+    # online is to use linear projection to find the closest point to the given
+    # distance, but this is not robust against complex, self-intersection
+    # lines. So, instead: we just assume it's between the second to last and
+    # last point.
     cp = line.interpolate(distance)
     return coords[:i] + [(cp.x, cp.y)]
 

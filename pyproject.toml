@@ -10,18 +10,21 @@ unweaver = "unweaver:cli.unweaver"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-flask = "^1.0"
-webargs = "^5.3"
+flask = "^1.1"
+webargs = "^6.1"
 click = "^7.0"
-entwiner = {git = "https://github.com/nbolten/entwiner.git", rev = "f0f32d0"}
+entwiner = {git = "https://github.com/nbolten/entwiner.git", rev = "97be898"}
 shapely = "^1.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 black = "18.9b0"
 pre-commit = "^1.14"
+pytest-cov = "^2.10.1"
+requests = "^2.24.0"
 
 [tool.black]
+line-length = 80
 exclude = """
 (
   setup.py

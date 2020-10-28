@@ -4,31 +4,34 @@ import os
 import entwiner
 from shapely.geometry import LineString, Point, mapping, shape
 
+from .constants import DB_PATH, DWITHIN
 from .geo import cut
 
 
-# TODO: move into constants module
-# The rectangular distance (r-tree distance) within to search for nearby edges.
-DWITHIN = 5e-4
-
-
 def get_graph(base_path):
-    db_path = os.path.join(base_path, "graph.db")
+    db_path = os.path.join(base_path, DB_PATH)
 
     return entwiner.DiGraphDBView(path=db_path)
 
 
 # TODO: consider an object-oriented / struct-ie approach? Lots of data reuse.
 def waypoint_candidates(
-    G, lon, lat, n, is_destination=False, dwithin=DWITHIN, invert=None, flip=None
+    G,
+    lon,
+    lat,
+    n,
+    is_destination=False,
+    dwithin=DWITHIN,
+    invert=None,
+    flip=None,
 ):
     """Produce the initial data needed to begin an on-graph search given input
-    coordinates. If the closest element is a node, the search can begin with no other
-    information. If the closest element is an edge (much more common), the search will
-    require a pseudo start point along the edge: the edge will be split into two
-    temporary edges so that any shortest-path search can be assisted with an initial
-    cost estimate. In addition, geometries will be modified so that accurate costs and
-    results can be displayed.
+    coordinates. If the closest element is a node, the search can begin with no
+    other information. If the closest element is an edge (much more common),
+    the search will require a pseudo start point along the edge: the edge will
+    be split into two temporary edges so that any shortest-path search can be
+    assisted with an initial cost estimate. In addition, geometries will be
+    modified so that accurate costs and results can be displayed.
 
     :param G: Graph instance.
     :type G: entwiner.DiGraphDB
@@ -36,29 +39,32 @@ def waypoint_candidates(
     :type lon: float
     :param lat: The latitude of the query point.
     :type lat: float
-    :param n: Maximum number of nearest candidates to return, sorted by distance.
+    :param n: Maximum number of nearest candidates to return, sorted by
+              distance.
     :type n: int
-    :param is_destination: Whether the query point is a destination. It is considered
-                           an origin by default. This impacts the orientation of any
-                           temporary edges created: they point 'away' from the query
-                           by default, but if considered a destination, the point to
-                           the query point.
+    :param is_destination: Whether the query point is a destination. It is
+                           considered an origin by default. This impacts the
+                           orientation of any temporary edges created: they
+                           point 'away' from the query by default, but if
+                           considered a destination, the point to the query
+                           point.
     :type is_destination: bool
     :param dwithin: distance from point to search.
     :param distance: float
-    :param invert: A list of edge attributes to invert (multiply by -1) if along
-                   reversed edge. e.g. an incline value.
+    :param invert: A list of edge attributes to invert (multiply by -1) if
+                   along reversed edge. e.g. an incline value.
     :type invert: list of str
-    :param flip: A list of edge attributes to flip (i.e. boolean-like, either 0/1 or
-                 True/False) for reversed edges. e.g. a one-way flag.
+    :param flip: A list of edge attributes to flip (i.e. boolean-like, either
+                 0/1 or True/False) for reversed edges. e.g. a one-way flag.
     :type flip: list of str
-    :returns: Generator of candidates sorted by distance. Each candidate is a dict
-              with a "type" key and data. If a candidate is a node, it has two entries:
-              "type": "node" and "node": key, where the node key is an in-graph node
-              identity. If a candidate is an edge, it has two entries: "type": "edge"
-              and "edges": halfedges, where halfedges is a list of dicts describing
-              the two temporary edges representing a splitting of the parent edge. Each
-              half edge dict has a "node" key for the on-graph node with which it is
+    :returns: Generator of candidates sorted by distance. Each candidate is a
+              dict with a "type" key and data. If a candidate is a node, it has
+              two entries: "type": "node" and "node": key, where the node key
+              is an in-graph node identity. If a candidate is an edge, it has
+              two entries: "type": "edge" and "edges": halfedges, where
+              halfedges is a list of dicts describing the two temporary edges
+              representing a splitting of the parent edge. Each half edge dict
+              has a "node" key for the on-graph node with which it is
               associated and an "edge" key with the full dict-like edge data.
     :rtype: generator of dicts
 
@@ -68,32 +74,33 @@ def waypoint_candidates(
     point = Point(lon, lat)
 
     # TODO: this is just a hack for proper nearest-neighbors functionality.
-    # Implement priority queue-based "true nearest neighbors" idea inspired by rtree
-    # implementations.
+    # Implement priority queue-based "true nearest neighbors" idea inspired by
+    # rtree implementations.
     # TODO: directly extract nodes as well?
-    edge_candidates = G.edges_dwithin(lon, lat, dwithin, sort=True)
+    edge_candidates = G.network.edges.dwithin(lon, lat, dwithin, sort=True)
 
     for i, c in enumerate(edge_candidates):
         if (i + 1) > n:
             break
-        yield create_temporary_node(c, point, is_destination=is_destination, invert=invert, flip=flip)
-
-    # return (create_temporary_node(c, point) for c in edge_candidates[:n])
+        yield create_temporary_node(G, c, point, is_destination, invert, flip)
 
 
-def reverse_edge(edge, invert=None, flip=None):
+def reverse_edge(G, edge, invert=None, flip=None):
     """Mutates edge in-place to be in the reverse orientation.
 
     :param edge: dict-like edge data (must have _geometry:LineString pair)
     :type edge: dict-like
     :param invert: Keys to 'invert', i.e. multiply by -1
     :type invert: list of str
-    :param flip: Keys to 'flip', i.e. truthy: 0s becomes 1, Trues become Falses.
+    :param flip: Keys to 'flip', i.e. truthy: 0s becomes 1, Trues become
+                 Falses.
     :type flip: list of str
 
     """
-    rev_coords = list(reversed(edge["_geometry"]["coordinates"]))
-    edge["_geometry"]["coordinates"] = rev_coords
+    rev_coords = list(
+        reversed(edge[G.network.edges.geom_column]["coordinates"])
+    )
+    edge[G.network.edges.geom_column]["coordinates"] = rev_coords
     if invert is not None:
         for key in invert:
             if key in edge:
@@ -104,7 +111,7 @@ def reverse_edge(edge, invert=None, flip=None):
                 edge[key] = type(edge[key])(not edge[key])
 
 
-def is_start_node(distance, linestring):
+def is_start_node(distance):
     if distance < 1e-12:
         return True
 
@@ -118,22 +125,38 @@ def is_end_node(distance, linestring):
     return False
 
 
-def new_edge(geom, d):
+def new_edge(G, geom, d):
+    """Create a copy of an edge but with a new geometry. Updates length value
+    automatically.
+
+    :param G: Entwiner graph
+    :type G: entwiner.DiGraphDB, entwiner.DiGraphDBView,
+             unweaver.augmented.AugmentedDiGraphDB,
+             unweaver.augmented.AugmentedDiGraphDBView
+    :param geom: new geometry (linestring)
+    :type geom: shapely.geometry.LineString
+    :param d: edge data to copy
+    :type d: dict with signature of edge data
+
+    """
     # TODO: Any way to avoid using `copy`?
     d = copy.copy(d)
 
     if "length" in d:
-        orig_geom = shape(d["_geometry"])
+        orig_geom = shape(d[G.network.edges.geom_column])
+        # TODO: just calculate the actual length using geopackage functions
         d["length"] = d["length"] * (geom.length / orig_geom.length)
 
-    d["_geometry"] = mapping(geom)
+    d[G.network.edges.geom_column] = mapping(geom)
 
     return d
 
 
 # TODO: remove 'n' attribute, it's not used here anyways
 class ProjectedNode:
-    def __init__(self, n, geometry, edge1=None, edge2=None, is_destination=False):
+    def __init__(
+        self, n, geometry, edge1=None, edge2=None, is_destination=False
+    ):
         self.n = n
         self.geometry = geometry
         self.edge1 = edge1
@@ -141,13 +164,15 @@ class ProjectedNode:
         self.is_destination = is_destination
 
 
-def create_temporary_node(edge, point, is_destination=False, invert=False, flip=False):
+def create_temporary_node(
+    G, edge, point, is_destination=False, invert=False, flip=False
+):
     u, v, d = edge
-    geometry = d["_geometry"]
+    geometry = d[G.network.edges.geom_column]
     geometry = shape(geometry)
     distance = geometry.project(point)
 
-    if is_start_node(distance, geometry):
+    if is_start_node(distance):
         # We're at the start of an edge - so we're already on the graph!
         return ProjectedNode(u, point, is_destination=is_destination)
 
@@ -155,10 +180,11 @@ def create_temporary_node(edge, point, is_destination=False, invert=False, flip=
         # We're at the end of an edge - so we're already on the graph!
         return ProjectedNode(v, point, is_destination=is_destination)
 
-    # Candidate is an edge - need to split and create temporary node + edge info
+    # Candidate is an edge - need to split and create temporary node + edge
+    # info
     try:
         geom1, geom2 = cut(geometry, distance)
-    except Exception as e:
+    except Exception:
         # TODO: make a specific exception for this case
         raise ValueError("Failed to cut edge associated with temporary node.")
 
@@ -166,14 +192,14 @@ def create_temporary_node(edge, point, is_destination=False, invert=False, flip=
     geom2 = LineString(geom2)
 
     # Create copies of the edge data with new geometries
-    d1 = new_edge(geom1, d)
-    d2 = new_edge(geom2, d)
+    d1 = new_edge(G, geom1, d)
+    d2 = new_edge(G, geom2, d)
 
     # Origin node should have outgoing edges, destination incoming.
     if is_destination:
-        reverse_edge(d2, invert=invert, flip=flip)
+        reverse_edge(G, d2, invert=invert, flip=flip)
     else:
-        reverse_edge(d1, invert=invert, flip=flip)
+        reverse_edge(G, d1, invert=invert, flip=flip)
 
     if is_destination:
         edge1 = (u, -1, d1)
@@ -182,4 +208,48 @@ def create_temporary_node(edge, point, is_destination=False, invert=False, flip=
         edge1 = (-1, u, d1)
         edge2 = (-1, v, d2)
 
-    return ProjectedNode(-1, point, edge1=edge1, edge2=edge2, is_destination=is_destination)
+    return ProjectedNode(
+        -1, point, edge1=edge1, edge2=edge2, is_destination=is_destination
+    )
+
+
+def choose_candidate(candidates, cost_function, edge_filter=None):
+    """
+
+    :param candidates: Iterable of candidates generated by waypoint_candidates.
+    :type candidates: generator
+    :param cost_function: Callable compatible with networkx cost functions
+    :type cost_function: callable
+    :param edge_filter: A function that return True for valid edges, False for
+                        invalid.
+    :type edge_filter: callable
+
+    """
+    # TODO: Scrap this function and reorganize
+    if edge_filter is None:
+
+        def edge_filter(x):
+            return True
+
+    # TODO: create a PseudoNode class and use it instead of these dictionaries
+    # TODO: Separate choice logic from data synthesis, e.g. cost function
+    for candidate in candidates:
+        if candidate.edge1 is None or candidate.edge2 is None:
+            # The candidate is an on-graph node: no extra costs to account for,
+            # just start/end at this node during shortest path search.
+            return candidate
+        else:
+            # Candidate is along an edge. Rule out if neither associated edge
+            # has non-infinite cost
+            if not edge_filter(candidate):
+                continue
+
+            cost1 = cost_function(-1, -2, candidate.edge1[2])
+            cost2 = cost_function(-1, -2, candidate.edge2[2])
+
+            if cost1 is None and cost2 is None:
+                continue
+
+            return candidate
+
+    return None

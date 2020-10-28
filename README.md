@@ -14,6 +14,42 @@ shortest paths within large graphs (e.g., you can't use contraction hierarchies)
 plan to add contraction hierarchies (and other strategies) to the upstream `entwiner`
 package for static cost functions.
 
+## Installation
+
+### Install non-python dependencies
+
+Unweaver depends on [entwiner](https://github.com/nbolten/entwiner), a GeoPackage-based
+graph format and build tools. These pieces of software need to be installed for
+`entwiner` to work:
+
+- SQLite3 (such as `libsqlite3`)
+- SpatiaLite (such as `libspatialite`)
+- GDAL (such as `libgdal`)
+
+### Install the package
+
+Unweaver is build with the `poetry` toolkit. When Unweaver is properly released on
+PyPI, installing the module will be as simple as running `poetry add unweaver`. For
+now, it must be installed from this repository. This can be done using either with
+`poetry` (ideal) or `pip` (for backwards compatibility).
+
+#### With `poetry`:
+
+Edit your `pyproject.toml` to include a line like this under
+[tool.poetry.dependencies]:
+
+    unweaver = {git = "https://github.com/nbolten/unweaver.git", rev = "f9f4bed"}
+
+You can choose `rev` to be whatever git commit hash you want to use.
+
+#### With `pip`:
+
+This can be done with a one-liner:
+
+    pip install git+https://github.com/nbolten/entwiner.git@f9f4bed#egg=unweaver
+
+Where the `@` entry is the commit. This can also be set to a branch name.
+
 ## Data format flexibility
 
 Unweaver was written with OpenStreetMap in mind, but can consume almost any linear

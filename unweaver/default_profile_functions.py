@@ -1,14 +1,15 @@
 def cost_function_generator():
     def cost_function(u, v, d):
-        # FIXME: "length" is not guaranteed to exist? Update `entwiner` to calculate
-        # a _length attribute for all edges?
+        # FIXME: "length" is not guaranteed to exist? Update `entwiner` to
+        # calculate a _length attribute for all edges?
         return d.get("length", None)
 
     return cost_function
 
 
-def directions_function(origin, destination, cost, nodes, edges):
+def directions_function(status, G, origin, destination, cost, nodes, edges):
     return {
+        "status": status,
         "origin": origin,
         "destination": destination,
         "total_cost": cost,
@@ -16,11 +17,12 @@ def directions_function(origin, destination, cost, nodes, edges):
     }
 
 
-def shortest_paths_function(origin, nodes, paths, edges):
+def shortest_paths_function(status, G, origin, nodes, paths, edges):
     """Return the minimum costs to nodes in the graph."""
     # FIXME: coordinates are derived from node string, should be derived from
     # node metadata (add node coordinates upstream in entwiner).
     return {
+        "status": status,
         "origin": origin,
         "paths": list(paths),
         "edges": {
@@ -28,7 +30,7 @@ def shortest_paths_function(origin, nodes, paths, edges):
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": edge.pop("_geometry"),
+                    "geometry": edge.pop(G.network.edges.geom_column),
                     "properties": edge,
                 }
                 for edge in edges
@@ -39,7 +41,7 @@ def shortest_paths_function(origin, nodes, paths, edges):
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": n["_geometry"],
+                    "geometry": n.pop(G.network.edges.geom_column),
                     "properties": {"cost": n["cost"]},
                 }
                 for n in nodes.values()
@@ -48,7 +50,7 @@ def shortest_paths_function(origin, nodes, paths, edges):
     }
 
 
-def reachable_function(origin, nodes, edges):
+def reachable_function(status, G, origin, nodes, edges):
     """Return the total extent of reachable edges."""
     # FIXME: coordinates are derived from node string, should be derived from
     # node metadata (add node coordinates upstream in entwiner).
@@ -68,13 +70,14 @@ def reachable_function(origin, nodes, edges):
         seen.add(edge_id)
 
     return {
+        "status": status,
         "origin": origin,
         "edges": {
             "type": "FeatureCollection",
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": edge.pop("_geometry"),
+                    "geometry": edge.pop(G.network.edges.geom_column),
                     "properties": edge,
                 }
                 for edge in unique_edges
@@ -85,7 +88,7 @@ def reachable_function(origin, nodes, edges):
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": node["_geometry"],
+                    "geometry": node[G.network.nodes.geom_column],
                     "properties": {"cost": node["cost"]},
                 }
                 for node in nodes.values()

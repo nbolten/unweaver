@@ -22,29 +22,33 @@ class ProfileSchema(Schema):
     args = fields.List(fields.Nested(ProfileArg))
     cost_function = fields.Str()
     directions = fields.Str()
-    id = fields.Str(required=True)
     name = fields.Str(required=True)
+    id = fields.Str(required=True)
     precalculate = fields.Boolean()
-    static = fields.Dict(keys=fields.Str(), values=fields.Field(), required=False)
+    static = fields.Dict(
+        keys=fields.Str(), values=fields.Field(), required=False
+    )
 
     def get_cost_function(self, obj):
         # Is there such thing as the opposite of eval?
         pass
 
+    # FIXME: does this even run? Was referring to undefined name
     def load_cost_function(self, value):
-        os.path.join(self.context[path], "..", value)
+        os.path.join(self.context["working_path"], "..", value)
 
     def get_directions(self, obj):
         # Is there such thing as the opposite of eval?
         pass
 
+    # FIXME: does this even run? Was referring to undefined name
     def load_directions(self, value):
-        os.path.join(self.context[path], "..", value)
+        os.path.join(self.context["working_path"], "..", value)
 
     @post_load
     def make_profile(self, data, **kwargs):
-        # TODO: investigate whether there's an elegant way to load the cost function
-        # in a field type.
+        # TODO: investigate whether there's an elegant way to load the cost
+        # function in a field type.
         if "working_path" not in self.context:
             # TODO: add useful message
             raise WorkingPathRequiredError()

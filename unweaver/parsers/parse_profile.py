@@ -11,8 +11,8 @@ def parse_profiles(directory):
     :type directory: str
 
     """
-    # TODO: add something to catch "no profiles found", possibly help users with
-    # extensions (e.g. naming .py instead of .json)
+    # TODO: add something to catch "no profiles found", possibly help users
+    #       with extensions (e.g. naming .py instead of .json)
     profiles = []
     for p in os.listdir(directory):
         if p.startswith("profile-") and p.endswith(".json"):

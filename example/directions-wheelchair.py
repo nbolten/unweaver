@@ -1,2 +1,2 @@
-def directions(cost, nodes, edges):
+def directions(G, cost, nodes, edges):
     return {"path": nodes}
