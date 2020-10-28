@@ -1,46 +1,48 @@
-from flask import g, jsonify
+from flask import g
+from marshmallow import Schema, fields
 from shapely.geometry import mapping
 
 from ...augmented import prepare_augmented
-from ...graph import waypoint_candidates
-from ...algorithms.shortest_path import _choose_candidate
+from ...constants import DWITHIN
+from ...graph import waypoint_candidates, choose_candidate
 from ...algorithms.reachable import reachable
+from .base_view import BaseView
 
 
-def reachable_view(view_args, cost_function, reachable_function):
-    lon = view_args["lon"]
-    lat = view_args["lat"]
-    max_cost = view_args["max_cost"]
+class ReachableSchema(Schema):
+    lon = fields.Float(required=True)
+    lat = fields.Float(required=True)
+    max_cost = fields.Float(required=True)
 
-    candidates = waypoint_candidates(
-        g.G, lon, lat, 4, is_destination=False, dwithin=5e-4
-    )
 
-    if candidates is None:
-        return jsonify(
-            {
-                "status": "InvalidWaypoint",
-                "msg": "No on-graph start point from given location.",
-                "status_data": {"index": -1},
-            }
+class ReachableView(BaseView):
+    view_name = "reachable"
+    schema = ReachableSchema
+
+    def run_analysis(self, arguments, cost_function):
+        lon = arguments["lon"]
+        lat = arguments["lat"]
+        max_cost = arguments["max_cost"]
+
+        candidates = waypoint_candidates(
+            g.G, lon, lat, 4, is_destination=False, dwithin=DWITHIN,
         )
+        if candidates is None:
+            # TODO: return too-far-away result
+            return "InvalidWaypoint"
+        candidate = choose_candidate(candidates, cost_function)
+        if candidate is None:
+            # TODO: return no-suitable-start-candidates result
+            return "InvalidWaypoint"
 
-    candidate = _choose_candidate(candidates, cost_function)
-
-    # TODO: unique message for this case?
-    if candidate is None:
-        return jsonify(
-            {
-                "status": "InvalidWaypoint",
-                "msg": "No on-graph start point from given location.",
-                "status_data": {"index": -1},
-            }
+        G_aug = prepare_augmented(g.G, candidate)
+        nodes, edges = reachable(
+            G_aug,
+            candidate,
+            cost_function,
+            max_cost,
+            self.precalculated_cost_function,
         )
+        origin = mapping(candidate.geometry)
 
-    G_aug = prepare_augmented(g.G, candidate)
-
-    nodes, edges = reachable(G_aug, candidate, cost_function, max_cost)
-    origin = mapping(candidate.geometry)
-    reachable_data = reachable_function(origin, nodes, edges)
-
-    return jsonify(reachable_data)
+        return ("Ok", G_aug, origin, nodes, edges)

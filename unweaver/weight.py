@@ -2,24 +2,24 @@ import os
 
 import entwiner
 
+from .constants import DB_PATH
 from .parsers import parse_profiles
 
 
 def precalculate_weights(directory):
     profiles = parse_profiles(directory)
-    G = entwiner.DiGraphDB(path=os.path.join(directory, "graph.db"))
+    G = entwiner.DiGraphDB(path=os.path.join(directory, DB_PATH))
     for profile in profiles:
         if profile["precalculate"]:
             weight_column = "_weight_{}".format(profile["name"])
             precalculate_weight(G, weight_column, profile["cost_function"])
 
 
-def precalculate_weight(G, weight_column, cost_function_generator, counter=None):
+def precalculate_weight(
+    G, weight_column, cost_function_generator, counter=None
+):
     cost_function = cost_function_generator()
     # FIXME: __setitem__ silently fails on immutable graph
-
-    # TODO: Abstract into `add_column` method for graphs?
-    G.sqlitegraph.execute(f"ALTER TABLE edges ADD COLUMN {weight_column} REAL")
 
     batch = []
     for i, (u, v, d) in enumerate(G.iter_edges()):

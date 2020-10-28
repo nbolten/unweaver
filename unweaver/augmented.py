@@ -1,4 +1,5 @@
-"""Augmented graph: add temporary nodes to a view of the `entwiner` database."""
+"""Augmented graph: add temporary nodes to a view of the `entwiner` database.
+"""
 from collections.abc import Mapping
 from itertools import chain
 from functools import partial
@@ -10,13 +11,12 @@ import networkx as nx
 # TODO: merge into `entwiner`?
 class AugmentedNodesView(Mapping):
     mapping_attr = "_node"
+
     def __init__(self, _G, _G_overlay):
         self.mapping = getattr(_G, self.mapping_attr)
         self.mapping_overlay = getattr(_G_overlay, self.mapping_attr)
 
     def __getitem__(self, key):
-        result = {}
-
         if key in self.mapping_overlay:
             return self.mapping_overlay[key]
 
@@ -48,7 +48,6 @@ class AugmentedOuterSuccessorsView(Mapping):
         self.mapping_overlay = getattr(_G_overlay, self.mapping_attr)
 
     def __getitem__(self, key):
-
         mapping_adj = tuple(self.mapping.get(key, {}).items())
         mapping_overlay_adj = tuple(self.mapping_overlay.get(key, {}).items())
 
@@ -56,18 +55,6 @@ class AugmentedOuterSuccessorsView(Mapping):
             return dict(chain(mapping_adj, mapping_overlay_adj))
 
         raise KeyError
-
-        # result = {}
-        # if key in self.mapping:
-        #     result = {**result, **self.mapping[key]}
-
-        # if key in self.mapping_overlay:
-        #     result = {**result, **self.mapping_overlay[key]}
-
-        # if result:
-        #     return result
-
-        # raise KeyError
 
     def __iter__(self):
         seen = set([])
@@ -92,9 +79,9 @@ class AugmentedDiGraphDBView(nx.DiGraph):
     node_dict_factory = AugmentedNodesView
     adjlist_outer_dict_factory = AugmentedOuterSuccessorsView
     # In networkx, inner adjlist is only ever invoked without parameters in
-    # order to assign new nodes or edges with no attr. Therefore, its functionality
-    # can be accounted for elsewhere: via __getitem__ and __setitem__ on the
-    # outer adjacency list.
+    # order to assign new nodes or edges with no attr. Therefore, its
+    # functionality can be accounted for elsewhere: via __getitem__ and
+    # __setitem__ on the outer adjacency list.
     adjlist_inner_dict_factory = dict
     edge_attr_dict_factory = dict
 
@@ -117,6 +104,8 @@ class AugmentedDiGraphDBView(nx.DiGraph):
         self._succ = self._adj = self.adjlist_outer_dict_factory()
         self._pred = AugmentedOuterPredecessorsView(_G=G, _G_overlay=G_overlay)
 
+        self.network = G.network
+
 
 def prepare_augmented(G, candidate):
     temp_edges = []
@@ -125,20 +114,23 @@ def prepare_augmented(G, candidate):
     if candidate.edge2 is not None:
         temp_edges.append(candidate.edge2)
 
-
     if temp_edges:
         G_overlay = nx.DiGraph()
         G_overlay.add_edges_from(temp_edges)
         for u, v, d in temp_edges:
-            # TODO: 'add_edges_from' should automatically add geometry info to nodes.
-            #       This is a workaround for the fact that it doesn't.
-            G_overlay.nodes[u]["_geometry"] = {
+            # TODO: 'add_edges_from' should automatically add geometry info to
+            #       nodes. This is a workaround for the fact that it doesn't.
+            G_overlay.nodes[u][G.network.nodes.geom_column] = {
                 "type": "Point",
-                "coordinates": list(d["_geometry"]["coordinates"][0]),
+                "coordinates": list(
+                    d[G.network.edges.geom_column]["coordinates"][0]
+                ),
             }
-            G_overlay.nodes[v]["_geometry"] = {
+            G_overlay.nodes[v][G.network.nodes.geom_column] = {
                 "type": "Point",
-                "coordinates": list(d["_geometry"]["coordinates"][-1]),
+                "coordinates": list(
+                    d[G.network.edges.geom_column]["coordinates"][-1]
+                ),
             }
         G = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
 

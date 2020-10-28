@@ -4,62 +4,78 @@ from networkx.algorithms.shortest_paths import multi_source_dijkstra
 
 
 from ..augmented import AugmentedDiGraphDBView
-from ..graph import waypoint_candidates
-from ..exceptions import InvalidWaypoint
+from ..constants import DWITHIN
+from ..graph import choose_candidate, waypoint_candidates
+from ..exceptions import NoPathError
 
 
-class NoPathError(Exception):
-    pass
-
-
-def waypoint_legs(G, waypoints, cost_function, invert=None, flip=None):
+def waypoint_legs(
+    G, waypoints, cost_function, invert=None, flip=None, dwithin=DWITHIN
+):
     pairs = zip(waypoints, waypoints[1:])
     legs = []
     for wp1, wp2 in pairs:
-        # FIXME: don't invert any properties on the fly, make use of symmetry of half-edges:
-        # e.g., for edge (u, v), edge (v, u) already has the flipped/inverted properties.
-        # FIXME: handle case where starting point is on the same edge: need to change
-        # the new edges being  inserted to reference one another, e.g. connect -1 to -2
-        # and vice versa.
-        wp1_candidates = waypoint_candidates(G, wp1[0], wp1[1], n=4, invert=invert, flip=flip)
-        wp2_candidates = waypoint_candidates(G, wp2[0], wp2[1], n=4, invert=invert, flip=flip, is_destination=True)
+        # FIXME: don't invert any properties on the fly, make use of symmetry
+        # of half-edges: e.g., for edge (u, v), edge (v, u) already has the
+        # flipped/inverted properties.
+        # FIXME: handle case where starting point is on the same edge: need to
+        # change the new edges being  inserted to reference one another, e.g.
+        # connect -1 to -2 and vice versa.
+        wp1_candidates = waypoint_candidates(
+            G, wp1[0], wp1[1], n=4, dwithin=dwithin, invert=invert, flip=flip
+        )
+        wp2_candidates = waypoint_candidates(
+            G,
+            wp2[0],
+            wp2[1],
+            n=4,
+            dwithin=dwithin,
+            invert=invert,
+            flip=flip,
+            is_destination=True,
+        )
 
-        # If closest points on the graph are on edges, multiple shortest path searches
-        # will be done (this is a good point for optimization in future releases) and the
-        # cheapest one will be kept.
+        # If closest points on the graph are on edges, multiple shortest path
+        # searches will be done (this is a good point for optimization in
+        # future releases) and the cheapest one will be kept.
         # TODO: generalize to multi-waypoints.
-        graph_wp1 = _choose_candidate(wp1_candidates, cost_function)
-        graph_wp2 = _choose_candidate(wp2_candidates, cost_function)
+        graph_wp1 = choose_candidate(wp1_candidates, cost_function)
+        graph_wp2 = choose_candidate(wp2_candidates, cost_function)
 
         legs.append([graph_wp1, graph_wp2])
 
     return legs
 
 
-def route_legs(G, legs, cost_function, invert=None, flip=None, edge_filter=None):
+def route_legs(
+    G, legs, cost_function, invert=None, flip=None, edge_filter=None
+):
     """Find the on-graph shortest path between two geolocated points.
 
     :param G: The routing graph.
     :type G: entwiner.DiGraphDB
-    :param legs: A list of origin-destination pairs as prepared by choose_candidate.
+    :param legs: A list of origin-destination pairs as prepared by
+                 choose_candidate.
     :type legs: list
-    :param cost_function: A networkx-compatible cost function. Takes u, v, ddict as
-                     parameters and returns a single number.
+    :param cost_function: A networkx-compatible cost function. Takes u, v,
+                          ddict as parameters and returns a single number.
     :type cost_function: callable
-    :param invert: A list of keys to "invert", i.e. multiply by -1, for any temporary
-                   reversed edges - i.e. when finding routes half way along an edge.
+    :param invert: A list of keys to "invert", i.e. multiply by -1, for any
+                   temporary reversed edges - i.e. when finding routes half way
+                   along an edge.
     :type invert: list of str
     :param flip: A list of keys fo "flip", i.e. swap truthiness, for the same
-                 "reversed" scenario for the `invert` parameter. 0s become 1s and Trues
-                 become Falses.
+                 "reversed" scenario for the `invert` parameter. 0s become 1s
+                 and Trues become Falses.
     :type flip: list of str
-    :param edge_filter: Function that filters origin/destination edges: if the edge is
-                        "good", the filter returns True, otherwise it returns False.
+    :param edge_filter: Function that filters origin/destination edges: if the
+                        edge is "good", the filter returns True, otherwise it
+                        returns False.
     :type edge_filter: callable
 
     """
-    # FIXME: written in a way that expects all waypoint nodes to have been pre-vetted
-    # to be non-None
+    # FIXME: written in a way that expects all waypoint nodes to have been
+    # pre-vetted to be non-None
     # TODO: Extract invertible/flippable edge attributes into the profile.
     # NOTE: Written this way to anticipate multi-waypoint routing
     G_overlay = nx.DiGraph()
@@ -87,13 +103,9 @@ def route_legs(G, legs, cost_function, invert=None, flip=None, edge_filter=None)
 
     route_legs = []
     for wp1, wp2 in legs:
-        routes = []
         try:
             cost, path = multi_source_dijkstra(
-                G_aug,
-                sources=[wp1.n],
-                target=wp2.n,
-                weight=cost_function,
+                G_aug, sources=[wp1.n], target=wp2.n, weight=cost_function,
             )
         # NOTE: Might want to try a new seed for waypoints instead of skipping.
         except nx.exception.NetworkXNoPath:
@@ -108,42 +120,3 @@ def route_legs(G, legs, cost_function, invert=None, flip=None, edge_filter=None)
 
     # TODO: Return multiple legs once multiple waypoints supported
     return route_legs[0]
-
-
-def _choose_candidate(candidates, cost_function, edge_filter=None):
-    """
-
-    :param candidates: Iterable of candidates generated by waypoint_candidates.
-    :type candidates: generator
-    :param cost_function: Callable compatible with networkx cost functions
-    :type cost_function: callable
-    :param edge_filter: A function that return True for valid edges, False for invalid.
-    :type edge_filter: callable
-
-    """
-    # TODO: Scrap this function and reorganize
-    if edge_filter is None:
-        edge_filter = lambda x: True
-
-    # TODO: create a PseudoNode class and use it instead of these dictionaries
-    # TODO: Separate choice logic from data synthesis, e.g. cost function
-    for candidate in candidates:
-        if candidate.edge1 is None or candidate.edge2 is None:
-            # The candidate is an on-graph node: no extra costs to account for, just
-            # start/end at this node during shortest path search.
-            return candidate
-        else:
-            # Candidate is along an edge. Rule out if neither associated edge has
-            # non-infinite cost
-            if not edge_filter(candidate):
-                continue
-
-            cost1 = cost_function(-1, -2, candidate.edge1[2])
-            cost2 = cost_function(-1, -2, candidate.edge2[2])
-
-            if cost1 is None and cost2 is None:
-                continue
-
-            return candidate
-
-    return None

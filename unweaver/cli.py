@@ -5,6 +5,7 @@ import click
 import fiona
 
 import entwiner
+from unweaver.constants import DB_PATH
 from unweaver.build import build_graph, get_layers_paths
 from unweaver.parsers import parse_profiles
 from unweaver.server import run_app
@@ -36,7 +37,10 @@ def build(directory, precision, changes_sign):
 
     with click.progressbar(length=n, label="Importing features") as bar:
         build_graph(
-            directory, precision=precision, changes_sign=changes_sign, counter=bar
+            directory,
+            precision=precision,
+            changes_sign=changes_sign,
+            counter=bar,
         )
 
     click.echo("Done.")
@@ -48,7 +52,7 @@ def weight(directory):
     # TODO: catch errors in starting server
     # TODO: spawn process?
     profiles = parse_profiles(directory)
-    G = entwiner.DiGraphDB(path=os.path.join(directory, "graph.db"))
+    G = entwiner.DiGraphDB(path=os.path.join(directory, DB_PATH))
     n_profiles = len([p for p in profiles if p["precalculate"]])
     n = G.size() * n_profiles
     with click.progressbar(length=n, label="Computing static weights") as bar:
