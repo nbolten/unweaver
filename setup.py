@@ -16,7 +16,7 @@ package_data = \
 
 install_requires = \
 ['click>=7.0,<8.0',
- 'entwiner @ git+https://github.com/nbolten/entwiner.git@97be898',
+ 'entwiner @ git+https://github.com/nbolten/entwiner.git@13fb2db',
  'flask>=1.1,<2.0',
  'shapely>=1.6,<2.0',
  'webargs>=6.1,<7.0']
