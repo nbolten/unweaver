@@ -2,7 +2,7 @@ from flask import g
 from marshmallow import Schema, fields
 from shapely.geometry import mapping
 
-from ...augmented import prepare_augmented
+from ...graphs.augmented import prepare_augmented
 from ...constants import DWITHIN
 from ...graph import waypoint_candidates, choose_candidate
 from ...algorithms.shortest_paths import shortest_paths

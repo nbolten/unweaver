@@ -1,5 +1,5 @@
 from unweaver.algorithms.reachable import reachable
-from unweaver.augmented import prepare_augmented
+from unweaver.graphs.augmented import prepare_augmented
 from unweaver.graph import waypoint_candidates, choose_candidate
 
 from ..constants import cost_fun, BOOKSTORE_POINT
