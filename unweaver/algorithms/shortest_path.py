@@ -105,7 +105,7 @@ def route_legs(
     for wp1, wp2 in legs:
         try:
             cost, path = multi_source_dijkstra(
-                G_aug, sources=[wp1.n], target=wp2.n, weight=cost_function,
+                G_aug, sources=[wp1.n], target=wp2.n, weight=cost_function
             )
         # NOTE: Might want to try a new seed for waypoints instead of skipping.
         except nx.exception.NetworkXNoPath:

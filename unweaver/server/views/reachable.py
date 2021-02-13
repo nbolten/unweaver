@@ -25,7 +25,7 @@ class ReachableView(BaseView):
         max_cost = arguments["max_cost"]
 
         candidates = waypoint_candidates(
-            g.G, lon, lat, 4, is_destination=False, dwithin=DWITHIN,
+            g.G, lon, lat, 4, is_destination=False, dwithin=DWITHIN
         )
         if candidates is None:
             # TODO: return too-far-away result
