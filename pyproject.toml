@@ -24,7 +24,7 @@ pytest-cov = "^2.10.1"
 requests = "^2.24.0"
 
 [tool.black]
-line-length = 80
+line-length = 79
 exclude = """
 (
   setup.py
