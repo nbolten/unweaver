@@ -6,6 +6,7 @@ packages = \
  'unweaver.algorithms',
  'unweaver.fields',
  'unweaver.geo',
+ 'unweaver.graphs',
  'unweaver.parsers',
  'unweaver.server',
  'unweaver.server.views']

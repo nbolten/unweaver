@@ -3,7 +3,7 @@ name = "unweaver"
 version = "0.1.0"
 description = "A flexible, easy to run routing engine."
 authors = ["Nick Bolten <nbolten@gmail.com>"]
-license = "MIT"
+license = "Apache-2.0"
 
 [tool.poetry.scripts]
 unweaver = "unweaver:cli.unweaver"
