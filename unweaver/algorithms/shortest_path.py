@@ -3,7 +3,7 @@ import networkx as nx
 from networkx.algorithms.shortest_paths import multi_source_dijkstra
 
 
-from ..augmented import AugmentedDiGraphDBView
+from ..graphs.augmented import AugmentedDiGraphDBView
 from ..constants import DWITHIN
 from ..graph import choose_candidate, waypoint_candidates
 from ..exceptions import NoPathError

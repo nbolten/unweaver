@@ -131,8 +131,8 @@ def new_edge(G, geom, d):
 
     :param G: Entwiner graph
     :type G: entwiner.DiGraphDB, entwiner.DiGraphDBView,
-             unweaver.augmented.AugmentedDiGraphDB,
-             unweaver.augmented.AugmentedDiGraphDBView
+             unweaver.graphs.augmented.AugmentedDiGraphDB,
+             unweaver.graphs.augmented.AugmentedDiGraphDBView
     :param geom: new geometry (linestring)
     :type geom: shapely.geometry.LineString
     :param d: edge data to copy
