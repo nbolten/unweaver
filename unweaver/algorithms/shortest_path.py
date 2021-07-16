@@ -1,20 +1,34 @@
 """Find the on-graph shortest path between two geolocated points."""
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple
+
+import entwiner
 import networkx as nx
 from networkx.algorithms.shortest_paths import multi_source_dijkstra
 
+from unweaver.geojson import Feature, Point
+from unweaver.graphs.augmented import AugmentedDiGraphDBView
+from unweaver.graph import EdgeData, ProjectedNode, CostFunction
+from unweaver.constants import DWITHIN
+from unweaver.graph import choose_candidate, waypoint_candidates
+from unweaver.exceptions import NoPathError
 
-from ..graphs.augmented import AugmentedDiGraphDBView
-from ..constants import DWITHIN
-from ..graph import choose_candidate, waypoint_candidates
-from ..exceptions import NoPathError
+
+Waypoints = Sequence[Feature[Point]]
 
 
 def waypoint_legs(
-    G, waypoints, cost_function, invert=None, flip=None, dwithin=DWITHIN
-):
+    G: entwiner.DiGraphDB,
+    waypoints: Waypoints,
+    cost_function: CostFunction,
+    invert: Optional[Iterable[str]] = None,
+    flip: Optional[Iterable[str]] = None,
+    dwithin: float = DWITHIN,
+) -> List[Tuple[Optional[ProjectedNode], Optional[ProjectedNode]]]:
     pairs = zip(waypoints, waypoints[1:])
     legs = []
     for wp1, wp2 in pairs:
+        lon1, lat1 = wp1.geometry.coordinates
+        lon2, lat2 = wp2.geometry.coordinates
         # FIXME: don't invert any properties on the fly, make use of symmetry
         # of half-edges: e.g., for edge (u, v), edge (v, u) already has the
         # flipped/inverted properties.
@@ -22,12 +36,12 @@ def waypoint_legs(
         # change the new edges being  inserted to reference one another, e.g.
         # connect -1 to -2 and vice versa.
         wp1_candidates = waypoint_candidates(
-            G, wp1[0], wp1[1], n=4, dwithin=dwithin, invert=invert, flip=flip
+            G, lon1, lat1, n=4, dwithin=dwithin, invert=invert, flip=flip
         )
         wp2_candidates = waypoint_candidates(
             G,
-            wp2[0],
-            wp2[1],
+            lon2,
+            lat2,
             n=4,
             dwithin=dwithin,
             invert=invert,
@@ -42,14 +56,19 @@ def waypoint_legs(
         graph_wp1 = choose_candidate(wp1_candidates, cost_function)
         graph_wp2 = choose_candidate(wp2_candidates, cost_function)
 
-        legs.append([graph_wp1, graph_wp2])
+        legs.append((graph_wp1, graph_wp2))
 
     return legs
 
 
 def route_legs(
-    G, legs, cost_function, invert=None, flip=None, edge_filter=None
-):
+    G: entwiner.DiGraphDB,
+    legs: List[Tuple[ProjectedNode, ProjectedNode]],
+    cost_function: CostFunction,
+    invert: Optional[Iterable[str]] = None,
+    flip: Optional[Iterable[str]] = None,
+    edge_filter: Callable[[ProjectedNode], bool] = lambda x: True,
+) -> Tuple[float, List[str], List[EdgeData]]:
     """Find the on-graph shortest path between two geolocated points.
 
     :param G: The routing graph.
@@ -79,9 +98,10 @@ def route_legs(
     # TODO: Extract invertible/flippable edge attributes into the profile.
     # NOTE: Written this way to anticipate multi-waypoint routing
     G_overlay = nx.DiGraph()
-    wp_id = -1
+    wp_index = -1
     for waypoints in legs:
         for wp in waypoints:
+            wp_id = str(wp_index)
             if wp.edge1 is None or wp.edge2 is None:
                 # It's a pure node that's already on-graph: skip
                 pass
@@ -97,11 +117,11 @@ def route_legs(
 
                 wp.n = wp_id
 
-                wp_id -= 1
+                wp_index -= 1
 
     G_aug = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
 
-    route_legs = []
+    result_legs = []
     for wp1, wp2 in legs:
         try:
             cost, path = multi_source_dijkstra(
@@ -116,7 +136,7 @@ def route_legs(
 
         edges = [dict(G_aug[u][v]) for u, v in zip(path, path[1:])]
 
-        route_legs.append((cost, path, edges))
+        result_legs.append((cost, path, edges))
 
     # TODO: Return multiple legs once multiple waypoints supported
-    return route_legs[0]
+    return result_legs[0]

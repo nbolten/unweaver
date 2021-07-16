@@ -1,10 +1,11 @@
 import json
 import os
+from typing import List
 
-from unweaver.profile import ProfileSchema
+from unweaver.profile import Profile, ProfileSchema
 
 
-def parse_profiles(directory):
+def parse_profiles(directory: str) -> List[Profile]:
     """Parse all profiles in a directory - all files matching profle-*.json
 
     :param directory: Directory (path) from which to parse profiles.
@@ -21,7 +22,7 @@ def parse_profiles(directory):
     return profiles
 
 
-def parse_profile(path):
+def parse_profile(path: str) -> Profile:
     """Parse a single profile.
 
     :param path: File path from which to parse profiles.

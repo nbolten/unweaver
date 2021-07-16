@@ -1,46 +1,50 @@
-from flask import g, jsonify
+from typing import List, Optional, Tuple, Union
 
-from .app import create_app
-from ..graph import get_graph
-from ..parsers import parse_profiles
+import flask
+from flask import g
+
+from unweaver.server.app import create_app
+from unweaver.graph import get_graph
+from unweaver.parsers import parse_profiles
 from .views import add_views
 
 
-def run_app(path, host="localhost", port=8000, add_headers=None, debug=False):
+Header = Tuple[str, str]
+
+
+def run_app(
+    path: str,
+    host: str = "localhost",
+    port: Union[str, int] = 8000,
+    add_headers: List[Header] = None,
+    debug: bool = False,
+) -> None:
     app = setup_app(path, add_headers, debug)
     app.run(host=host, port=port)
 
 
-def setup_app(path, add_headers=None, debug=False):
+def setup_app(
+    path: str, add_headers: Optional[List[Header]] = None, debug: bool = False
+) -> flask.Flask:
     if add_headers is None:
-        add_headers = [
+        # Using new variable name to make mypy happy
+        headers = [
             ("Access-Control-Allow-Origin", "*"),
             ("Access-Control-Allow-Headers", "Content-Type,Authorization"),
             ("Access-Control-Allow-Methods", "GET"),
         ]
+    else:
+        headers = add_headers
 
     profiles = parse_profiles(path)
 
     app = create_app()
 
-    # FIXME: Redundant!
-    # Return validation errors as JSON
-    @app.errorhandler(422)
-    @app.errorhandler(400)
-    def handle_error(err):
-        headers = err.data.get("headers", None)
-        messages = err.data.get("messages", ["Invalid request."])
-        if headers:
-            return jsonify({"errors": messages}), err.code, headers
-        else:
-            return jsonify({"errors": messages}), err.code
-
-    if debug:
-        app.config["DEBUG"] = True
+    # TODO: handle 404, 400
 
     # Share graph db connection
     @app.before_request
-    def before_request():
+    def before_request() -> None:
         # Create a db connection
         try:
             # TODO: any issues with concurrent connections? Should we share
@@ -53,15 +57,16 @@ def setup_app(path, add_headers=None, debug=False):
             g.failed_graph = True
 
     @app.after_request
-    def after_request(response):
-        for header, value in add_headers:
+    def after_request(
+        response: flask.wrappers.Response,
+    ) -> flask.wrappers.Response:
+        for header, value in headers:
             response.headers[header] = value
         return response
 
     @app.teardown_request
-    def teardown_request(exception):
+    def teardown_request(exception: Exception = None) -> None:
         # TODO: add CORS info?
-        # g.G.sqlitegraph.conn.close()
         g.G = None
 
     for profile in profiles:

@@ -1,60 +1,65 @@
+from typing import Any, Callable, Optional, Type, Union
+
 from flask import g, jsonify
 from marshmallow import Schema
 from webargs.flaskparser import use_args
 
-from ... import default_profile_functions
+from unweaver.graph import CostFunction
+from unweaver.profile import Profile
 
 
 class BaseView:
-    # TODO: require definition of view name
-    view_name = None
+    view_name: Optional[str] = None
+    schema: Type[Schema]
 
-    def __init__(self, profile):
+    def __init__(self, profile: Profile):
+        if self.view_name is None:
+            raise AttributeError(
+                "BaseView subclass must have view_name class attribute."
+            )
         self.profile = profile
 
     @property
-    def cost_function_generator(self):
-        return self.profile.get(
-            "cost_function_generator",
-            default_profile_functions.cost_function_generator,
-        )
+    def cost_function_generator(self) -> Callable[..., CostFunction]:
+        return self.profile["cost_function"]
 
     @property
-    def precalculated_cost_function(self):
+    def precalculated_cost_function(self) -> Union[CostFunction, None]:
         if "precalculate" in self.profile:
-            weight_column = "_weight_{}".format(self.profile["id"])
+            weight_column = f"_weight_{self.profile['id']}"
             return lambda u, v, d: d.get(weight_column, None)
         else:
             return None
 
-    def run_analysis(self, arguments, cost_function):
+    def run_analysis(
+        self, arguments: dict, cost_function: CostFunction
+    ) -> Any:
         raise NotImplementedError
 
-    @property
-    def interpretation_function_name(self):
-        return f"{self.view_name}_function"
-
-    def interpret_result(self, result):
-        interpretation_function = self.profile.get(
-            self.interpretation_function_name,
-            getattr(
-                default_profile_functions, self.interpretation_function_name
-            ),
-        )
+    def interpret_result(self, result: Any) -> str:
+        if self.view_name == "directions":
+            interpretation_function = self.profile["directions"]
+        elif self.view_name == "shortest_paths":
+            interpretation_function = self.profile["shortest_paths"]
+        elif self.view_name == "reachable":
+            interpretation_function = self.profile["reachable"]
+        else:
+            interpretation_function = self.profile["directions"]
         result = interpretation_function(*result)
         return jsonify(result)
 
-    def create_view(self):
+    def create_view(self) -> Callable:
         profile_args = {
             arg["name"]: arg["type"] for arg in self.profile.get("args", [])
         }
         profile_schema = Schema.from_dict(profile_args)
 
-        class CombinedSchema(self.schema, profile_schema):
+        # Have to ignore type - profile_schema from_dict fails static analysis
+        class CombinedSchema(self.schema, profile_schema):  # type: ignore
             pass
 
         @use_args(CombinedSchema(), location="query")
-        def view(args):
+        def view(args: dict) -> Any:
             if g.get("failed_graph", False):
                 return jsonify({"status": "NoGraph"})
             cost_args = {k: v for k, v in args.items() if k in profile_args}

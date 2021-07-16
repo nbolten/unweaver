@@ -1,12 +1,19 @@
+from typing import Any, Iterable, Mapping, Tuple, Union
+
 from flask import g
 from marshmallow import Schema, fields
 from shapely.geometry import mapping
 
-from ...graphs.augmented import prepare_augmented
-from ...constants import DWITHIN
-from ...graph import waypoint_candidates, choose_candidate
-from ...algorithms.shortest_paths import shortest_paths
-
+from unweaver.geojson import Feature, Point, makePointFeature
+from unweaver.graph import CostFunction
+from unweaver.graphs.augmented import prepare_augmented, AugmentedDiGraphDBView
+from unweaver.constants import DWITHIN
+from unweaver.graph import waypoint_candidates, choose_candidate, EdgeData
+from unweaver.algorithms.shortest_paths import (
+    shortest_paths,
+    ReachedNode,
+    ReachedNodes,
+)
 
 from .base_view import BaseView
 
@@ -21,7 +28,19 @@ class ShortestPathsView(BaseView):
     view_name = "shortest_paths"
     schema = ShortestPathsSchema
 
-    def run_analysis(self, arguments, cost_function):
+    def run_analysis(
+        self, arguments: Mapping, cost_function: CostFunction
+    ) -> Union[
+        str,
+        Tuple[
+            str,
+            AugmentedDiGraphDBView,
+            Feature[Point],
+            ReachedNodes,
+            Any,
+            Iterable[EdgeData],
+        ],
+    ]:
         lon = arguments["lon"]
         lat = arguments["lat"]
         max_cost = arguments["max_cost"]
@@ -31,6 +50,7 @@ class ShortestPathsView(BaseView):
         )
         if candidates is None:
             # TODO: return too-far-away result
+            # TODO: normalize return type to be mapping with optional keys
             return "InvalidWaypoint"
         candidate = choose_candidate(candidates, cost_function)
         if candidate is None:
@@ -38,16 +58,22 @@ class ShortestPathsView(BaseView):
             return "InvalidWaypoint"
 
         G_aug = prepare_augmented(g.G, candidate)
-        costs, paths, edges = shortest_paths(
+        reached_nodes, paths, edges = shortest_paths(
             G_aug,
             candidate.n,
             cost_function,
             max_cost,
             self.precalculated_cost_function,
         )
-        nodes = {}
-        for node_id, cost in costs.items():
-            nodes[node_id] = {**G_aug.nodes[node_id], "cost": cost}
-        origin = mapping(candidate.geometry)
+
+        geom_key = g.G.network.nodes.geom_column
+        nodes: ReachedNodes = {}
+        for node_id, reached_node in reached_nodes.items():
+            node_attr = G_aug.nodes[node_id]
+            # TODO: figure out why we're retrieving attrs from G_aug here?
+            nodes[node_id] = ReachedNode(
+                key=node_id, geom=node_attr[geom_key], cost=reached_node.cost,
+            )
+        origin = makePointFeature(*mapping(candidate.geometry)["coordinates"])
 
         return ("Ok", G_aug, origin, nodes, paths, edges)

@@ -30,7 +30,7 @@ def test_waypoint_candidates(built_G):
     candidate = candidates[0]
 
     # is a pseudo-edge
-    assert candidate.edge1[0] == -1
+    assert candidate.edge1[0] == "-1"
     # expect exactly this edge - fid 50
     assert candidate.edge1[2]["fid"] == 50
     # Double check that it's a sidewalk
@@ -41,7 +41,7 @@ def test_waypoint_candidates(built_G):
     assert (edge1_len - 63.5) < 0.1
 
     # is a pseudo-edge
-    assert candidate.edge2[0] == -1
+    assert candidate.edge2[0] == "-1"
     # expect exactly this edge - fid 50
     assert candidate.edge2[2]["fid"] == 50
     # Double check that it's a sidewalk
@@ -52,7 +52,7 @@ def test_waypoint_candidates(built_G):
     assert (edge2_len - 19.6) < 0.1
 
     # Made-up node ID (node will be injected into augmented graph)
-    assert candidate.n == -1
+    assert candidate.n == "-1"
 
     assert candidate.geometry.x == -122.313108
     assert candidate.geometry.y == 47.661011

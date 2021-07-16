@@ -1,9 +1,18 @@
+from typing import Type, Union
+
+from flask import Flask
+
+from unweaver.profile import Profile
 from .directions import DirectionsView
 from .reachable import ReachableView
 from .shortest_paths import ShortestPathsView
 
+View = Union[
+    Type[DirectionsView], Type[ReachableView], Type[ShortestPathsView]
+]
 
-def add_view(app, view, profile):
+
+def add_view(app: Flask, view: View, profile: Profile) -> None:
     # TODO: Could use url_for and a real Flask route template?
     url = f"/{view.view_name}/{profile['name']}.json"
 
@@ -16,7 +25,7 @@ def add_view(app, view, profile):
     )
 
 
-def add_views(app, profile):
+def add_views(app: Flask, profile: Profile) -> None:
     add_view(app, DirectionsView, profile)
     add_view(app, ShortestPathsView, profile)
     add_view(app, ReachableView, profile)

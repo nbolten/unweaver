@@ -14,6 +14,9 @@ venv
 # vim editor files
 *.swp
 
+# mypy type check caching dirs
+.mypy_cache
+
 # Temporary and/or hacking directories
 demos
 
