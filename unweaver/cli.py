@@ -1,5 +1,6 @@
 """unweaver CLI."""
 import os
+from typing import List
 
 import click
 import fiona
@@ -13,15 +14,15 @@ from unweaver.weight import precalculate_weight
 
 
 @click.group()
-def unweaver():
+def unweaver() -> None:
     pass
 
 
 @unweaver.command()
-@click.argument("directory", type=click.Path("r"))
+@click.argument("directory", type=click.Path())
 @click.option("--precision", default=7)
 @click.option("--changes-sign", multiple=True)
-def build(directory, precision, changes_sign):
+def build(directory: str, precision: int, changes_sign: List[str]) -> None:
     click.echo("Estimating feature count...")
     # TODO: catch errors in starting server
     # TODO: spawn process?
@@ -47,8 +48,8 @@ def build(directory, precision, changes_sign):
 
 
 @unweaver.command()
-@click.argument("directory", type=click.Path("r"))
-def weight(directory):
+@click.argument("directory", type=click.Path())
+def weight(directory: str) -> None:
     # TODO: catch errors in starting server
     # TODO: spawn process?
     profiles = parse_profiles(directory)
@@ -58,19 +59,19 @@ def weight(directory):
     with click.progressbar(length=n, label="Computing static weights") as bar:
         for profile in profiles:
             if profile["precalculate"]:
-                weight_column = "_weight_{}".format(profile["id"])
+                weight_column = "_weight_{profile['id']}"
                 precalculate_weight(
                     G, weight_column, profile["cost_function"], counter=bar
                 )
 
 
 @unweaver.command()
-@click.argument("directory", type=click.Path("r"))
+@click.argument("directory", type=click.Path())
 @click.option("--host", "-h", default="localhost")
 @click.option("--port", "-p", default=8000)
 @click.option("--debug", is_flag=True)
-def serve(directory, host, port, debug=False):
-    click.echo("Starting server in {}...".format(directory))
+def serve(directory: str, host: str, port: str, debug: bool = False) -> None:
+    click.echo(f"Starting server in {directory}...")
     # TODO: catch errors in starting server
     # TODO: spawn process?
     run_app(directory, host=host, port=port, debug=debug)

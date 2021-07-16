@@ -1,6 +1,7 @@
 import pytest
 
 from unweaver.build import build_graph
+from unweaver.geojson import makePointFeature
 from unweaver.weight import precalculate_weights
 from unweaver.algorithms.shortest_path import waypoint_legs
 
@@ -23,9 +24,11 @@ def built_G_weighted(built_G):
 
 @pytest.fixture()
 def test_waypoint_legs(built_G):
+    origin = makePointFeature(*BOOKSTORE_POINT)
+    destination = makePointFeature(*CAFE_POINT)
     # This route takes 4 seconds or so. Why so slow? Profile.
     legs = waypoint_legs(
-        built_G, (BOOKSTORE_POINT, CAFE_POINT), cost_fun, invert=("incline",)
+        built_G, (origin, destination), cost_fun, invert=("incline",)
     )
     # TODO: test output
     return legs

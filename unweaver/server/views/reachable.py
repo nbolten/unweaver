@@ -1,11 +1,21 @@
+from typing import List, Mapping, Tuple, Union
+
 from flask import g
 from marshmallow import Schema, fields
 from shapely.geometry import mapping
 
-from ...graphs.augmented import prepare_augmented
-from ...constants import DWITHIN
-from ...graph import waypoint_candidates, choose_candidate
-from ...algorithms.reachable import reachable
+from unweaver.geojson import Feature, Point, makePointFeature
+from unweaver.graphs.augmented import prepare_augmented, AugmentedDiGraphDBView
+from unweaver.constants import DWITHIN
+from unweaver.graph import (
+    waypoint_candidates,
+    choose_candidate,
+    EdgeData,
+    CostFunction,
+)
+from unweaver.algorithms.shortest_paths import ReachedNodes
+from unweaver.algorithms.reachable import reachable
+
 from .base_view import BaseView
 
 
@@ -19,7 +29,19 @@ class ReachableView(BaseView):
     view_name = "reachable"
     schema = ReachableSchema
 
-    def run_analysis(self, arguments, cost_function):
+    # TODO: more specific than Mapping
+    def run_analysis(
+        self, arguments: Mapping, cost_function: CostFunction
+    ) -> Union[
+        str,
+        Tuple[
+            str,
+            AugmentedDiGraphDBView,
+            Feature[Point],
+            ReachedNodes,
+            List[EdgeData],
+        ],
+    ]:
         lon = arguments["lon"]
         lat = arguments["lat"]
         max_cost = arguments["max_cost"]
@@ -43,6 +65,6 @@ class ReachableView(BaseView):
             max_cost,
             self.precalculated_cost_function,
         )
-        origin = mapping(candidate.geometry)
+        origin = makePointFeature(*mapping(candidate.geometry)["coordinates"])
 
         return ("Ok", G_aug, origin, nodes, edges)

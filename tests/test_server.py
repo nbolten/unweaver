@@ -1,7 +1,4 @@
 # TODO: actually run the server via the CLI
-import json
-
-from flask import request
 import pytest
 
 from unweaver.server import setup_app

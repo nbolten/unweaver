@@ -1,13 +1,45 @@
+from typing import (
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+)
+
+import entwiner
 from networkx.algorithms.shortest_paths import single_source_dijkstra
+
+from unweaver.geojson import Point
+from unweaver.graph import EdgeData, CostFunction
+
+
+Path = List[str]
+
+
+class BaseNode(NamedTuple):
+    key: str
+    geom: Point
+
+
+class ReachedNode(NamedTuple):
+    key: str
+    geom: Point
+    cost: float
+
+
+ReachedNodes = Dict[str, ReachedNode]
+
+Paths = Dict[str, Path]
 
 
 def shortest_paths(
-    G,
-    start_node,
-    cost_function,
-    max_cost=None,
-    precalculated_cost_function=None,
-):
+    G: entwiner.DiGraphDBView,
+    start_node: str,
+    cost_function: CostFunction,
+    max_cost: Optional[float] = None,
+    precalculated_cost_function: Optional[CostFunction] = None,
+) -> Tuple[ReachedNodes, Paths, Iterable[EdgeData]]:
     """Find the shortest paths to on-graph nodes starting at a given edge/node,
     subject to a maximum total "distance"/cost constraint.
 
@@ -27,6 +59,7 @@ def shortest_paths(
     if precalculated_cost_function is not None:
         cost_function = precalculated_cost_function
 
+    paths: Paths
     distances, paths = single_source_dijkstra(
         G, start_node, cutoff=max_cost, weight=cost_function
     )
@@ -38,18 +71,24 @@ def shortest_paths(
 
     # FIXME: entwiner should leverage a 'get an nbunch' method so that this
     # requires only one SQL query.
-    def edge_generator(G, edge_ids):
+    def edge_data_generator(
+        G: entwiner.DiGraphDBView, edge_ids: List[Tuple[str, str]]
+    ) -> Iterable[EdgeData]:
         for u, v in edge_ids:
             edge = dict(G[u][v])
             edge["_u"] = u
             edge["_v"] = v
             yield edge
 
-    edges = edge_generator(G, edge_ids)
+    edges_data = edge_data_generator(G, edge_ids)
 
+    geom_key = G.network.nodes.geom_column
     # Create nodes dictionary that contains both cost data and node attributes
-    nodes = {}
+    nodes: ReachedNodes = {}
     for node_id, distance in distances.items():
-        nodes[node_id] = {**G.nodes[node_id], "cost": distance}
+        node_attr = G.nodes[node_id]
+        nodes[node_id] = ReachedNode(
+            key=node_id, geom=node_attr[geom_key], cost=distance
+        )
 
-    return nodes, paths, edges
+    return nodes, paths, edges_data

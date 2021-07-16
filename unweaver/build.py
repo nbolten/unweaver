@@ -1,14 +1,15 @@
 import os
+from typing import Iterable, List, Optional
 
-import fiona
-
+from click._termui_impl import ProgressBar
 import entwiner
 
-from .constants import DB_PATH
-from .exceptions import MissingLayersError
+
+from unweaver.constants import DB_PATH
+from unweaver.exceptions import MissingLayersError
 
 
-def get_layers_paths(path):
+def get_layers_paths(path: str) -> List[str]:
     layers_path = os.path.join(path, "layers")
     if not os.path.exists(layers_path):
         raise MissingLayersError("layers directory not found.")
@@ -24,7 +25,12 @@ def get_layers_paths(path):
     return layers_paths
 
 
-def build_graph(path, precision=7, changes_sign=None, counter=None):
+def build_graph(
+    path: str,
+    precision: int = 7,
+    changes_sign: Iterable[str] = None,
+    counter: Optional[ProgressBar] = None,
+) -> entwiner.DiGraphDB:
     builder = entwiner.GraphBuilder(
         precision=precision, changes_sign=changes_sign
     )
@@ -39,10 +45,3 @@ def build_graph(path, precision=7, changes_sign=None, counter=None):
     builder.finalize_db(db_path)
 
     return builder.G
-
-
-def n_features(paths):
-    n = 0
-    for path in paths:
-        with fiona.open(path) as c:
-            n += len(c)

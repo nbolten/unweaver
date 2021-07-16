@@ -1,7 +1,10 @@
 """Function to cut Shapely LineStrings at a distance along them."""
+from typing import List, Iterator, Tuple
+
+from shapely.geometry import LineString
 
 
-def cut(line, distance):
+def cut(line: LineString, distance: float) -> List[Iterator[float]]:
     """Cuts a Shapely LineString at the stated distance. Returns a list of two
     new LineStrings for valid inputs. If the distance is 0, negative, or longer
     than the LineString, a list with the original LineString is produced.
@@ -17,7 +20,7 @@ def cut(line, distance):
     # coords = list(line.coords)
     coords = line.coords
 
-    pd = 0
+    pd = 0.0
     last = coords[0]
     for i, p in enumerate(coords):
         if i == 0:
@@ -43,7 +46,7 @@ def cut(line, distance):
     return [coords[:i] + [(cp.x, cp.y)], [(cp.x, cp.y)] + coords[i:]]
 
 
-def cut_off(line, distance):
+def cut_off(line: LineString, distance: float) -> List[List[float]]:
     """Cuts a Shapely LineString at the stated distance. Returns a list of two
     new LineStrings for valid inputs. If the distance is 0, negative, or longer
     than the LineString, a list with the original LineString is produced.
@@ -58,7 +61,7 @@ def cut_off(line, distance):
         return list(line.coords)
     coords = line.coords
 
-    pd = 0
+    pd = 0.0
     last = coords[0]
     for i, p in enumerate(coords):
         if i == 0:
@@ -84,7 +87,7 @@ def cut_off(line, distance):
     return coords[:i] + [(cp.x, cp.y)]
 
 
-def _point_distance(p1, p2):
+def _point_distance(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
     """Distance between two points (l2 norm).
 
     :param p1: Point 1.

@@ -1,13 +1,38 @@
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    TypedDict,
+)
+
+import entwiner
 from entwiner.utils import haversine
 from shapely.geometry import mapping, shape
 
-from ..geo import cut_off
-from .shortest_paths import shortest_paths
+from unweaver.geo import cut_off
+from unweaver.geojson import LineString
+from unweaver.graph import EdgeData, ProjectedNode, makeNodeID, CostFunction
+from .shortest_paths import (
+    shortest_paths,
+    BaseNode,
+    ReachedNode,
+)
+
+
+class FringeCandidate(TypedDict):
+    cost: float
+    edge_data: EdgeData
+    proportion: float
 
 
 def reachable(
-    G, candidate, cost_function, max_cost, precalculated_cost_function=None
-):
+    G: entwiner.DiGraphDBView,
+    candidate: ProjectedNode,
+    cost_function: CostFunction,
+    max_cost: float,
+    precalculated_cost_function: Optional[CostFunction] = None,
+) -> Tuple[Dict[str, ReachedNode], List[EdgeData]]:
     """Generate all reachable places on graph, allowing extensions beyond
     existing nodes (e.g., assuming cost function is distance in meters and
     max_cost is 400, will extend to 400 meters from origin, creating new fake
@@ -72,13 +97,13 @@ def reachable(
             traveled_edges.add((u, v))
 
             # Determine cost of traversal
-            edge = G[u][v]
-            edge = dict(edge)
+            edge_data = G[u][v]
+            edge_data = dict(edge_data)
             # FIXME:  this value is incorrect for precalculated weights. Need
             # to maintain precalculated and non-precalculated versions of the
             # cost function and apply the non-precalculated for these
             # situations.
-            cost = cost_function(u, v, edge)
+            cost = cost_function(u, v, edge_data)
 
             # Exclude non-traversible edges
             if cost is None:
@@ -87,20 +112,24 @@ def reachable(
             # If the total cost is still less than max_cost, we will have
             # traveled the whole edge - there is no new "pseudo" node, only a
             # new edge.
-            if v in nodes and nodes[v]["cost"] + cost < max_cost:
-                interpolate_proportion = 1
+            if v in nodes and nodes[v].cost + cost < max_cost:
+                interpolate_proportion = 1.0
             else:
-                remaining = max_cost - nodes[u]["cost"]
+                remaining = max_cost - nodes[u].cost
                 interpolate_proportion = remaining / cost
 
-            edge["_u"] = u
-            edge["_v"] = v
+            # TODO: Use consistent data classes for passing around edge data,
+            # leave (de)serialization concerns up to near-db interfaces
+            edge_data["_u"] = u
+            edge_data["_v"] = v
 
-            fringe_candidates[(u, v)] = {
+            fringe_candidate: FringeCandidate = {
                 "cost": cost,
-                "edge": edge,
+                "edge_data": edge_data,
                 "proportion": interpolate_proportion,
             }
+
+            fringe_candidates[(u, v)] = fringe_candidate
 
     fringe_edges = []
     seen = set()
@@ -109,22 +138,19 @@ def reachable(
     # shortest-path tree was reachable from the initial half-edge.
     # started = list(set([path[0] for target, path in paths.items()]))
 
-    # edge1 = candidate.edge1
-    # edge2 = candidate.edge2
-
     # Adjust / remove fringe proportions based on context
-    for edge_id, candidate in fringe_candidates.items():
+    for edge_id, fringe_candidate in fringe_candidates.items():
         # Skip already-seen edges (e.g. reverse edges we looked ahead for).
         if edge_id in seen:
             continue
 
-        edge = candidate["edge"]
-        proportion = candidate["proportion"]
-        cost = candidate["cost"]
+        edge_data = fringe_candidate["edge_data"]
+        proportion = fringe_candidate["proportion"]
+        cost = fringe_candidate["cost"]
 
         # Can traverse whole edge - keep it
         if proportion == 1:
-            fringe_edges.append(edge)
+            fringe_edges.append(edge_data)
             continue
 
         rev_edge_id = (edge_id[1], edge_id[0])
@@ -135,7 +161,7 @@ def reachable(
             rev_proportion = fringe_candidates[rev_edge_id]["proportion"]
             if proportion + rev_proportion > 1:
                 # They intersect - the entire edge can be traversed.
-                fringe_edges.append(edge)
+                fringe_edges.append(edge_data)
                 continue
             else:
                 # They do not intersect. Keep the original proportions
@@ -146,12 +172,14 @@ def reachable(
         # (2) It doesn't overlap with any other partial edges
 
         # Create primary partial edge and node and append to the saved data
-        fringe_edge, fringe_node = _make_partial_edge(G, edge, proportion)
+        fringe_edge, fringe_node = _make_partial_edge(G, edge_data, proportion)
 
         fringe_edges.append(fringe_edge)
-        fringe_node_id = fringe_node.pop("_key")
+        fringe_node_id = fringe_node.key
 
-        nodes[fringe_node_id] = {**fringe_node, "cost": max_cost}
+        nodes[fringe_node_id] = ReachedNode(
+            key=fringe_node.key, geom=fringe_node.geom, cost=max_cost
+        )
 
         seen.add(edge_id)
 
@@ -160,7 +188,9 @@ def reachable(
     return nodes, edges
 
 
-def _make_partial_edge(G, edge, proportion):
+def _make_partial_edge(
+    G: entwiner.DiGraphDBView, edge: EdgeData, proportion: float
+) -> Tuple[EdgeData, BaseNode]:
     # Create edge and pseudonode
     # TODO: use real length
     # FIXME: Create an Edge class that knows the geometry column name.
@@ -173,14 +203,14 @@ def _make_partial_edge(G, edge, proportion):
     fringe_edge = {**edge}
     cut_geom = cut_off(geom, interpolate_distance)
 
-    fringe_edge[geom_key] = {"type": "LineString", "coordinates": cut_geom}
+    fringe_edge[geom_key] = LineString(cut_geom)
     fringe_point = geom.interpolate(interpolate_distance)
-    fringe_node_id = "{}, {}".format(*list(fringe_point.coords)[0])
+    fringe_node_id = makeNodeID(*fringe_point.coords[0])
 
-    fringe_node = {"_key": fringe_node_id, geom_key: mapping(fringe_point)}
+    fringe_node = BaseNode(key=fringe_node_id, geom=mapping(fringe_point))
 
     fringe_edge["_v"] = fringe_node_id
 
-    fringe_edge["length"] = haversine(fringe_edge[geom_key]["coordinates"])
+    fringe_edge["length"] = haversine(fringe_edge[geom_key].coordinates)
 
     return fringe_edge, fringe_node
