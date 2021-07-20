@@ -7,11 +7,11 @@ from typing import (
     Tuple,
 )
 
-import entwiner
 from networkx.algorithms.shortest_paths import single_source_dijkstra
 
 from unweaver.geojson import Point
-from unweaver.graph import EdgeData, CostFunction
+from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graphs import DiGraphGPKGView
 
 
 Path = List[str]
@@ -34,7 +34,7 @@ Paths = Dict[str, Path]
 
 
 def shortest_paths(
-    G: entwiner.DiGraphDBView,
+    G: DiGraphGPKGView,
     start_node: str,
     cost_function: CostFunction,
     max_cost: Optional[float] = None,
@@ -69,10 +69,10 @@ def shortest_paths(
         set([(u, v) for p in paths.values() for u, v in zip(p, p[1:])])
     )
 
-    # FIXME: entwiner should leverage a 'get an nbunch' method so that this
+    # FIXME: graph should leverage a 'get an nbunch' method so that this
     # requires only one SQL query.
     def edge_data_generator(
-        G: entwiner.DiGraphDBView, edge_ids: List[Tuple[str, str]]
+        G: DiGraphGPKGView, edge_ids: List[Tuple[str, str]]
     ) -> Iterable[EdgeData]:
         for u, v in edge_ids:
             edge = dict(G[u][v])

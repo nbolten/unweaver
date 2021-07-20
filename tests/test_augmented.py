@@ -1,4 +1,4 @@
-from unweaver.graphs.augmented import prepare_augmented
+from unweaver.augmented import prepare_augmented
 from unweaver.graph import waypoint_candidates
 
 from .constants import BOOKSTORE_POINT

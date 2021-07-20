@@ -1,4 +1,4 @@
-"""Augmented graph: add temporary nodes to a view of the `entwiner` database.
+"""Augmented graph: add temporary nodes to a (read-only) DiGraphGPKG view.
 """
 from collections.abc import Mapping
 from itertools import chain
@@ -12,19 +12,18 @@ from typing import (
     Set,
 )
 
-import entwiner
 import networkx as nx
 
 from unweaver.geojson import Point
 from unweaver.graph import ProjectedNode
+from unweaver.graphs.digraphgpkg import DiGraphGPKGView
 
 
 # TODO: create a module with single class per file
-# TODO: merge into `entwiner`?
 class AugmentedNodesView(Mapping):
     mapping_attr = "_node"
 
-    def __init__(self, _G: entwiner.DiGraphDBView, _G_overlay: dict):
+    def __init__(self, _G: DiGraphGPKGView, _G_overlay: dict):
         self.mapping = getattr(_G, self.mapping_attr)
         self.mapping_overlay = getattr(_G_overlay, self.mapping_attr)
 
@@ -55,7 +54,7 @@ class AugmentedNodesView(Mapping):
 class AugmentedOuterSuccessorsView(Mapping):
     mapping_attr = "_succ"
 
-    def __init__(self, _G: entwiner.DiGraphDBView, _G_overlay: dict):
+    def __init__(self, _G: DiGraphGPKGView, _G_overlay: dict):
         self.mapping = getattr(_G, self.mapping_attr)
         self.mapping_overlay = getattr(_G_overlay, self.mapping_attr)
 
@@ -88,7 +87,7 @@ class AugmentedOuterPredecessorsView(AugmentedOuterSuccessorsView):
     mapping_attr = "_pred"
 
 
-class AugmentedDiGraphDBView(nx.DiGraph):
+class AugmentedDiGraphGPKGView(nx.DiGraph):
     node_dict_factory: Callable = AugmentedNodesView
     adjlist_outer_dict_factory: Callable = AugmentedOuterSuccessorsView
     # In networkx, inner adjlist is only ever invoked without parameters in
@@ -98,9 +97,7 @@ class AugmentedDiGraphDBView(nx.DiGraph):
     adjlist_inner_dict_factory = dict
     edge_attr_dict_factory: Callable = dict
 
-    def __init__(
-        self, G: entwiner.DiGraphDBView, G_overlay: Optional[dict] = None
-    ):
+    def __init__(self, G: DiGraphGPKGView, G_overlay: Optional[dict] = None):
         if G_overlay is None:
             G_overlay = {}
         # The factories of nx dict-likes need to be informed of the connection
@@ -135,8 +132,8 @@ class AugmentedDiGraphDBView(nx.DiGraph):
 
 
 def prepare_augmented(
-    G: entwiner.DiGraphDBView, candidate: ProjectedNode
-) -> AugmentedDiGraphDBView:
+    G: DiGraphGPKGView, candidate: ProjectedNode
+) -> AugmentedDiGraphGPKGView:
     temp_edges = []
     if candidate.edge1 is not None:
         temp_edges.append(candidate.edge1)
@@ -155,6 +152,6 @@ def prepare_augmented(
             G_overlay.nodes[v][G.network.nodes.geom_column] = Point(
                 d[G.network.edges.geom_column]["coordinates"][-1]
             )
-        G = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
+        G = AugmentedDiGraphGPKGView(G=G, G_overlay=G_overlay)
 
     return G

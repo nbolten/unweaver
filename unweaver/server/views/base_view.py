@@ -4,7 +4,7 @@ from flask import g, jsonify
 from marshmallow import Schema
 from webargs.flaskparser import use_args
 
-from unweaver.graph import CostFunction
+from unweaver.graph_types import CostFunction
 from unweaver.profile import Profile
 
 

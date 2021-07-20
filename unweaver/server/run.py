@@ -48,7 +48,7 @@ def setup_app(
         # Create a db connection
         try:
             # TODO: any issues with concurrent connections? Should we share
-            # one db connection (DiGraphDB instance) vs. reconnecting?
+            # one db connection (DiGraphGPKG instance) vs. reconnecting?
             if "G" not in g:
                 g.G = get_graph(path)
         except Exception as e:

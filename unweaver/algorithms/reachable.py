@@ -6,13 +6,14 @@ from typing import (
     TypedDict,
 )
 
-import entwiner
-from entwiner.utils import haversine
 from shapely.geometry import mapping, shape
 
 from unweaver.geo import cut_off
 from unweaver.geojson import LineString
-from unweaver.graph import EdgeData, ProjectedNode, makeNodeID, CostFunction
+from unweaver.graph import ProjectedNode, makeNodeID
+from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graphs import DiGraphGPKGView
+from unweaver.utils import haversine
 from .shortest_paths import (
     shortest_paths,
     BaseNode,
@@ -27,7 +28,7 @@ class FringeCandidate(TypedDict):
 
 
 def reachable(
-    G: entwiner.DiGraphDBView,
+    G: DiGraphGPKGView,
     candidate: ProjectedNode,
     cost_function: CostFunction,
     max_cost: float,
@@ -189,7 +190,7 @@ def reachable(
 
 
 def _make_partial_edge(
-    G: entwiner.DiGraphDBView, edge: EdgeData, proportion: float
+    G: DiGraphGPKGView, edge: EdgeData, proportion: float
 ) -> Tuple[EdgeData, BaseNode]:
     # Create edge and pseudonode
     # TODO: use real length

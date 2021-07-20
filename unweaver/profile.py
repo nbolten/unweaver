@@ -15,7 +15,7 @@ from typing import (
 from marshmallow import Schema, fields, post_load
 
 from unweaver.fields.eval import Eval
-from unweaver.graph import CostFunction
+from unweaver.graph_types import CostFunction
 from unweaver import default_profile_functions
 
 

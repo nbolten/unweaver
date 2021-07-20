@@ -1,6 +1,5 @@
 from shapely.geometry import LineString
 
-from entwiner.utils import haversine
 from unweaver.graph import (
     is_end_node,
     is_start_node,
@@ -8,6 +7,7 @@ from unweaver.graph import (
     reverse_edge,
     waypoint_candidates,
 )
+from unweaver.utils import haversine
 
 from .constants import BOOKSTORE_POINT
 

@@ -1,6 +1,5 @@
 from typing import Dict, List, Tuple, Union
 
-import entwiner
 from flask import g
 from marshmallow import Schema, fields
 
@@ -9,8 +8,9 @@ from unweaver.algorithms.shortest_path import (
     waypoint_legs,
     NoPathError,
 )
-from unweaver.graph import EdgeData, CostFunction
+from unweaver.graph_types import EdgeData, CostFunction
 from unweaver.geojson import Feature, Point, makePointFeature
+from unweaver.graphs import DiGraphGPKG
 
 from .base_view import BaseView
 
@@ -32,7 +32,7 @@ class DirectionsView(BaseView):
         Tuple[str],
         Tuple[
             str,
-            entwiner.DiGraphDB,
+            DiGraphGPKG,
             Feature[Point],
             Feature[Point],
             float,
@@ -63,17 +63,20 @@ class DirectionsView(BaseView):
         path: List[str]
         edges: List[EdgeData]
 
-        if self.precalculated_cost_function is None:
+        if (
+            self.profile["precalculate"]
+            and self.precalculated_cost_function is not None
+        ):
             try:
                 cost, path, edges = route_legs(
-                    g.G, checked_legs, cost_function
+                    g.G, checked_legs, self.precalculated_cost_function
                 )
             except NoPathError:
                 return ("NoPath",)
         else:
             try:
                 cost, path, edges = route_legs(
-                    g.G, checked_legs, self.precalculated_cost_function
+                    g.G, checked_legs, cost_function
                 )
             except NoPathError:
                 return ("NoPath",)

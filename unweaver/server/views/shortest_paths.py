@@ -4,11 +4,11 @@ from flask import g
 from marshmallow import Schema, fields
 from shapely.geometry import mapping
 
-from unweaver.geojson import Feature, Point, makePointFeature
-from unweaver.graph import CostFunction
-from unweaver.graphs.augmented import prepare_augmented, AugmentedDiGraphDBView
+from unweaver.augmented import prepare_augmented, AugmentedDiGraphGPKGView
 from unweaver.constants import DWITHIN
-from unweaver.graph import waypoint_candidates, choose_candidate, EdgeData
+from unweaver.geojson import Feature, Point, makePointFeature
+from unweaver.graph import waypoint_candidates, choose_candidate
+from unweaver.graph_types import CostFunction, EdgeData
 from unweaver.algorithms.shortest_paths import (
     shortest_paths,
     ReachedNode,
@@ -34,7 +34,7 @@ class ShortestPathsView(BaseView):
         str,
         Tuple[
             str,
-            AugmentedDiGraphDBView,
+            AugmentedDiGraphGPKGView,
             Feature[Point],
             ReachedNodes,
             Any,
@@ -58,13 +58,18 @@ class ShortestPathsView(BaseView):
             return "InvalidWaypoint"
 
         G_aug = prepare_augmented(g.G, candidate)
-        reached_nodes, paths, edges = shortest_paths(
-            G_aug,
-            candidate.n,
-            cost_function,
-            max_cost,
-            self.precalculated_cost_function,
-        )
+        if self.profile["precalculate"]:
+            reached_nodes, paths, edges = shortest_paths(
+                G_aug,
+                candidate.n,
+                cost_function,
+                max_cost,
+                self.precalculated_cost_function,
+            )
+        else:
+            reached_nodes, paths, edges = shortest_paths(
+                G_aug, candidate.n, cost_function, max_cost, cost_function,
+            )
 
         geom_key = g.G.network.nodes.geom_column
         nodes: ReachedNodes = {}

@@ -9,18 +9,11 @@ summarized in "profiles". Unweaver's costing strategy includes dynamics (as oppo
 to precalculated) edge costs for when profiles need to be heavily parameterized on a
 per-user basis.
 
-Note: on-the-fly custom costing precludes certain strategies for rapidly finding
-shortest paths within large graphs (e.g., you can't use contraction hierarchies). We
-plan to add contraction hierarchies (and other strategies) to the upstream `entwiner`
-package for static cost functions.
-
 ## Installation
 
 ### Install non-python dependencies
 
-Unweaver depends on [entwiner](https://github.com/nbolten/entwiner), a GeoPackage-based
-graph format and build tools. These pieces of software need to be installed for
-`entwiner` to work:
+Unweaver depends on the following software packages in order to run:
 
 - SQLite3 (such as `libsqlite3`)
 - SpatiaLite (such as `libspatialite`)
@@ -46,19 +39,34 @@ You can choose `rev` to be whatever git commit hash you want to use.
 
 This can be done with a one-liner:
 
-    pip install git+https://github.com/nbolten/entwiner.git@f9f4bed#egg=unweaver
+    pip install git+https://github.com/nbolten/unweaver.git@f9f4bed#egg=unweaver
 
 Where the `@` entry is the commit. This can also be set to a branch name.
 
 ## Data format flexibility
 
-Unweaver was written with OpenStreetMap in mind, but can consume almost any linear
-spatial data through its use of [entwiner](https://github.com/nbolten/entwiner).
+Unweaver can ingest any linear (LineString) format processable by GDAL,
+including GeoJSON and Shapefiles. The primary graph data structure created from
+these data is a portable, routable [GeoPackage](https://www.geopackage.org/).
 
-Because Unweaver uses `entwiner`, the graph representation is an SQLite database that
-can be shared between services or published as open data. Unweaver can be run in
-in-memory or on-disk modes so that you can choose your own trade-off between speed
-(in-memory is faster) and memory (on-disk is very low-memory).
+This GeoPackage stores network information in an edge list format using two
+feature tables: `nodes` and `edges`.
+
+`nodes` has a primary key (`fid`), a unique node id (`_n`), and a Point
+geometry column (`geom` by default). The `nodes` table can be extended to
+include any number of other columns, but `unweaver` does not automatically do
+so during the build step at this time.
+
+`edges` has a primary key (`fid`) a unique pair of node ids that describe the
+edge (`_u` and `_v`), and a LineString geometry column. The `edges` table is
+automatically extended during the build process, transforming input linear data
+properties into column names and values. For example, a "length" numeric
+property in the input data will result in the creation of a numeric "length"
+column populated with the associated values. The use of `_u` and `_v` to
+uniquely identify an edge means that `unweaver` describes a digraph and not
+a multidigraph. Multidigraph support is planned for the near future, as
+real-world networks frequently have multiple paths starting and ending at the
+same location.
 
 ## Profiles
 

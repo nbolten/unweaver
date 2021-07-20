@@ -11,11 +11,27 @@ class Point:
     type = "Point"
     coordinates: Position
 
+    def as_dict(self) -> dict:
+        data = asdict(self)
+        return_dict = {"type": self.type}
+        for key, value in data.items():
+            if value is not None:
+                return_dict[key] = value
+        return return_dict
+
 
 @dataclass
 class LineString:
     type = "LineString"
     coordinates: List[Position]
+
+    def as_dict(self) -> dict:
+        data = asdict(self)
+        return_dict = {"type": self.type}
+        for key, value in data.items():
+            if value is not None:
+                return_dict[key] = value
+        return return_dict
 
 
 GeometryType = TypeVar("GeometryType", Point, LineString)
@@ -29,7 +45,11 @@ class Feature(Generic[GeometryType]):
 
     def as_dict(self) -> dict:
         data = asdict(self)
-        return {key: value for key, value in data.items() if value is not None}
+        return_dict = {"type": self.type, "properties": self.properties}
+        for key, value in data.items():
+            if value is not None:
+                return_dict[key] = value
+        return return_dict
 
 
 def makePointFeature(

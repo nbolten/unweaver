@@ -1,6 +1,6 @@
 import pytest
 
-from unweaver.build import build_graph
+from unweaver.build.build_graph import build_graph
 from unweaver.geojson import makePointFeature
 from unweaver.weight import precalculate_weights
 from unweaver.algorithms.shortest_path import waypoint_legs

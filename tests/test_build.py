@@ -1,6 +1,6 @@
 import pytest
 
-from unweaver.build import get_layers_paths
+from unweaver.build.get_layers_paths import get_layers_paths
 from unweaver.exceptions import MissingLayersError
 
 from .constants import BUILD_PATH

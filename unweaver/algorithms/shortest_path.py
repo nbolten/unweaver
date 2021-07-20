@@ -1,13 +1,23 @@
 """Find the on-graph shortest path between two geolocated points."""
-from typing import Callable, Iterable, List, Optional, Sequence, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
-import entwiner
 import networkx as nx
 from networkx.algorithms.shortest_paths import multi_source_dijkstra
 
+from unweaver.augmented import AugmentedDiGraphGPKGView
 from unweaver.geojson import Feature, Point
-from unweaver.graphs.augmented import AugmentedDiGraphDBView
-from unweaver.graph import EdgeData, ProjectedNode, CostFunction
+from unweaver.graphs import DiGraphGPKG
+from unweaver.graph import ProjectedNode
+from unweaver.graph_types import EdgeData, CostFunction
 from unweaver.constants import DWITHIN
 from unweaver.graph import choose_candidate, waypoint_candidates
 from unweaver.exceptions import NoPathError
@@ -17,7 +27,7 @@ Waypoints = Sequence[Feature[Point]]
 
 
 def waypoint_legs(
-    G: entwiner.DiGraphDB,
+    G: DiGraphGPKG,
     waypoints: Waypoints,
     cost_function: CostFunction,
     invert: Optional[Iterable[str]] = None,
@@ -62,7 +72,7 @@ def waypoint_legs(
 
 
 def route_legs(
-    G: entwiner.DiGraphDB,
+    G: DiGraphGPKG,
     legs: List[Tuple[ProjectedNode, ProjectedNode]],
     cost_function: CostFunction,
     invert: Optional[Iterable[str]] = None,
@@ -72,7 +82,7 @@ def route_legs(
     """Find the on-graph shortest path between two geolocated points.
 
     :param G: The routing graph.
-    :type G: entwiner.DiGraphDB
+    :type G: unweaver.graphs.DiGraphGPKG
     :param legs: A list of origin-destination pairs as prepared by
                  choose_candidate.
     :type legs: list
@@ -119,9 +129,12 @@ def route_legs(
 
                 wp_index -= 1
 
-    G_aug = AugmentedDiGraphDBView(G=G, G_overlay=G_overlay)
+    G_aug = AugmentedDiGraphGPKGView(G=G, G_overlay=G_overlay)
 
     result_legs = []
+    cost: float
+    path: List[str]
+    edges: List[Dict[str, Any]]
     for wp1, wp2 in legs:
         try:
             cost, path = multi_source_dijkstra(

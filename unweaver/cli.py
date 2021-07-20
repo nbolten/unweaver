@@ -5,9 +5,10 @@ from typing import List
 import click
 import fiona
 
-import entwiner
 from unweaver.constants import DB_PATH
-from unweaver.build import build_graph, get_layers_paths
+from unweaver.build.build_graph import build_graph
+from unweaver.build.get_layers_paths import get_layers_paths
+from unweaver.graphs import DiGraphGPKG
 from unweaver.parsers import parse_profiles
 from unweaver.server import run_app
 from unweaver.weight import precalculate_weight
@@ -53,7 +54,7 @@ def weight(directory: str) -> None:
     # TODO: catch errors in starting server
     # TODO: spawn process?
     profiles = parse_profiles(directory)
-    G = entwiner.DiGraphDB(path=os.path.join(directory, DB_PATH))
+    G = DiGraphGPKG(path=os.path.join(directory, DB_PATH))
     n_profiles = len([p for p in profiles if p["precalculate"]])
     n = G.size() * n_profiles
     with click.progressbar(length=n, label="Computing static weights") as bar:

@@ -1,15 +1,14 @@
 from typing import List, Optional
 
-import entwiner
-
 from unweaver.geojson import Feature, Point
-from unweaver.graph import EdgeData, CostFunction
+from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graphs import DiGraphGPKG, DiGraphGPKGView
 from unweaver.algorithms.shortest_paths import Paths, ReachedNodes
 
 
 def cost_function_generator() -> CostFunction:
     def cost_function(u: str, v: str, d: EdgeData) -> Optional[float]:
-        # FIXME: "length" is not guaranteed to exist? Update `entwiner` to
+        # FIXME: "length" is not guaranteed to exist? Update to
         # calculate a _length attribute for all edges?
         return d.get("length", None)
 
@@ -18,7 +17,7 @@ def cost_function_generator() -> CostFunction:
 
 def directions(
     status: str,
-    G: entwiner.DiGraphDB,
+    G: DiGraphGPKG,
     origin: Feature[Point],
     destination: Feature[Point],
     cost: Optional[float],
@@ -36,7 +35,7 @@ def directions(
 
 def shortest_paths(
     status: str,
-    G: entwiner.DiGraphDBView,
+    G: DiGraphGPKGView,
     origin: Feature[Point],
     nodes: ReachedNodes,
     paths: Paths,
@@ -44,7 +43,7 @@ def shortest_paths(
 ) -> dict:
     """Return the minimum costs to nodes in the graph."""
     # FIXME: coordinates are derived from node string, should be derived from
-    # node metadata (add node coordinates upstream in entwiner).
+    # node metadata (add node coordinates in graph data).
     return {
         "status": status,
         "origin": origin,
@@ -77,14 +76,14 @@ def shortest_paths(
 # TODO: constrain output to be JSON or JSON-like?
 def reachable(
     status: str,
-    G: entwiner.DiGraphDBView,
+    G: DiGraphGPKGView,
     origin: Feature[Point],
     nodes: ReachedNodes,
     edges: List[EdgeData],
 ) -> dict:
     """Return the total extent of reachable edges."""
     # FIXME: coordinates are derived from node string, should be derived from
-    # node metadata (add node coordinates upstream in entwiner).
+    # node metadata (add node coordinates in graph data).
     unique_edges = []
     seen = set()
     for edge in edges:

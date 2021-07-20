@@ -4,9 +4,18 @@ from setuptools import setup
 packages = \
 ['unweaver',
  'unweaver.algorithms',
+ 'unweaver.build',
+ 'unweaver.databases.geopackage',
  'unweaver.fields',
  'unweaver.geo',
  'unweaver.graphs',
+ 'unweaver.graphs.digraphgpkg',
+ 'unweaver.graphs.digraphgpkg.edges',
+ 'unweaver.graphs.digraphgpkg.inner_adjlists',
+ 'unweaver.graphs.digraphgpkg.nodes',
+ 'unweaver.graphs.digraphgpkg.outer_adjlists',
+ 'unweaver.network_adapters',
+ 'unweaver.network_adapters.geopackagenetwork',
  'unweaver.parsers',
  'unweaver.server',
  'unweaver.server.views']
@@ -15,11 +24,7 @@ package_data = \
 {'': ['*']}
 
 install_requires = \
-['click>=7.0,<8.0',
- 'entwiner @ git+https://github.com/nbolten/entwiner.git@13fb2db',
- 'flask>=1.1,<2.0',
- 'shapely>=1.6,<2.0',
- 'webargs>=6.1,<7.0']
+['click>=7.0,<8.0', 'flask>=1.1,<2.0', 'shapely>=1.6,<2.0', 'webargs>=6.1,<7.0']
 
 entry_points = \
 {'console_scripts': ['unweaver = unweaver:cli.unweaver']}

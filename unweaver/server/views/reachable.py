@@ -4,15 +4,11 @@ from flask import g
 from marshmallow import Schema, fields
 from shapely.geometry import mapping
 
+from unweaver.augmented import prepare_augmented, AugmentedDiGraphGPKGView
 from unweaver.geojson import Feature, Point, makePointFeature
-from unweaver.graphs.augmented import prepare_augmented, AugmentedDiGraphDBView
 from unweaver.constants import DWITHIN
-from unweaver.graph import (
-    waypoint_candidates,
-    choose_candidate,
-    EdgeData,
-    CostFunction,
-)
+from unweaver.graph import waypoint_candidates, choose_candidate
+from unweaver.graph_types import EdgeData, CostFunction
 from unweaver.algorithms.shortest_paths import ReachedNodes
 from unweaver.algorithms.reachable import reachable
 
@@ -36,7 +32,7 @@ class ReachableView(BaseView):
         str,
         Tuple[
             str,
-            AugmentedDiGraphDBView,
+            AugmentedDiGraphGPKGView,
             Feature[Point],
             ReachedNodes,
             List[EdgeData],
@@ -58,13 +54,19 @@ class ReachableView(BaseView):
             return "InvalidWaypoint"
 
         G_aug = prepare_augmented(g.G, candidate)
-        nodes, edges = reachable(
-            G_aug,
-            candidate,
-            cost_function,
-            max_cost,
-            self.precalculated_cost_function,
-        )
+        if self.profile["precalculate"]:
+            nodes, edges = reachable(
+                G_aug,
+                candidate,
+                cost_function,
+                max_cost,
+                self.precalculated_cost_function,
+            )
+        else:
+            nodes, edges = reachable(
+                G_aug, candidate, cost_function, max_cost, cost_function,
+            )
+
         origin = makePointFeature(*mapping(candidate.geometry)["coordinates"])
 
         return ("Ok", G_aug, origin, nodes, edges)

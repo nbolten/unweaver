@@ -1,27 +1,22 @@
 import copy
 from dataclasses import dataclass
 import os
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Callable, Iterable, Optional
 
-import entwiner
 from shapely.geometry import LineString, Point, mapping, shape
 
 from unweaver.constants import DB_PATH, DWITHIN
 from unweaver.geo import cut
-
-# TODO: add derived properties to EdgeData? e.g. _length
-EdgeData = dict
-Edge = Tuple[str, str, EdgeData]
-CostFunction = Callable[[str, str, EdgeData], Optional[float]]
-
+from unweaver.graph_types import CostFunction, EdgeData, EdgeTuple
+from unweaver.graphs import DiGraphGPKG, DiGraphGPKGView
 
 # TODO: remove 'n' attribute, it's not used here anyways
 @dataclass
 class ProjectedNode:
     n: str
     geometry: Point
-    edge1: Optional[Edge] = None
-    edge2: Optional[Edge] = None
+    edge1: Optional[EdgeTuple] = None
+    edge2: Optional[EdgeTuple] = None
     is_destination: bool = False
 
 
@@ -29,15 +24,15 @@ def makeNodeID(lon: float, lat: float) -> str:
     return f"{lon}, {lat}"
 
 
-def get_graph(base_path: str) -> entwiner.DiGraphDBView:
+def get_graph(base_path: str) -> DiGraphGPKGView:
     db_path = os.path.join(base_path, DB_PATH)
 
-    return entwiner.DiGraphDBView(path=db_path)
+    return DiGraphGPKGView(path=db_path)
 
 
 # TODO: consider an object-oriented / struct-ie approach? Lots of data reuse.
 def waypoint_candidates(
-    G: entwiner.DiGraphDBView,
+    G: DiGraphGPKGView,
     lon: float,
     lat: float,
     n: int,
@@ -55,7 +50,7 @@ def waypoint_candidates(
     modified so that accurate costs and results can be displayed.
 
     :param G: Graph instance.
-    :type G: entwiner.DiGraphDB
+    :type G: unweaver.graphs.DiGraphGPKG
     :param lon: The longitude of the query point.
     :type lon: float
     :param lat: The latitude of the query point.
@@ -107,7 +102,7 @@ def waypoint_candidates(
 
 
 def reverse_edge(
-    G: entwiner.DiGraphDB,
+    G: DiGraphGPKG,
     edge: EdgeData,
     invert: Optional[Iterable[str]] = None,
     flip: Optional[Iterable[str]] = None,
@@ -151,16 +146,14 @@ def is_end_node(distance: float, linestring: LineString) -> bool:
     return False
 
 
-def new_edge(
-    G: entwiner.DiGraphDBView, geom: LineString, d: EdgeData
-) -> EdgeData:
+def new_edge(G: DiGraphGPKGView, geom: LineString, d: EdgeData) -> EdgeData:
     """Create a copy of an edge but with a new geometry. Updates length value
     automatically.
 
-    :param G: Entwiner graph
-    :type G: entwiner.DiGraphDB, entwiner.DiGraphDBView,
-             unweaver.graphs.augmented.AugmentedDiGraphDB,
-             unweaver.graphs.augmented.AugmentedDiGraphDBView
+    :param G: Graph wrapper
+    :type G: unweaver.graphs.DiGraphGPKG, unweaver.graphs.DiGraphGPKGView,
+             unweaver.augmented.AugmentedDiGraphGPKG,
+             unweaver.augmented.AugmentedDiGraphGPKGView
     :param geom: new geometry (linestring)
     :type geom: shapely.geometry.LineString
     :param d: edge data to copy
@@ -181,8 +174,8 @@ def new_edge(
 
 
 def create_temporary_node(
-    G: entwiner.DiGraphDBView,
-    edge: Edge,
+    G: DiGraphGPKGView,
+    edge: EdgeTuple,
     point: Point,
     is_destination: bool = False,
     invert: Optional[Iterable[str]] = None,
