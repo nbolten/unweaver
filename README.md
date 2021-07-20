@@ -125,3 +125,8 @@ Unweaver comes with a built-in web API generator (WIP - it is currently hard-cod
 The purpose of the API generator is to translate customized cost functions into
 web API routes and parameters, allowing you to be completely free in how you want
 users to interact with your application.
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for information on contributing
+to the development of `unweaver`.
