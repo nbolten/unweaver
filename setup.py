@@ -24,7 +24,14 @@ package_data = \
 {'': ['*']}
 
 install_requires = \
-['click>=7.0,<8.0', 'flask>=1.1,<2.0', 'shapely>=1.6,<2.0', 'webargs>=6.1,<7.0']
+['Fiona>=1.8.20,<2.0.0',
+ 'click>=7.0,<8.0',
+ 'flask>=1.1,<2.0',
+ 'geomet>=0.3.0,<0.4.0',
+ 'networkx>=2.6.3,<3.0.0',
+ 'pyproj>=3.2.1,<4.0.0',
+ 'shapely>=1.6,<2.0',
+ 'webargs>=6.1,<7.0']
 
 entry_points = \
 {'console_scripts': ['unweaver = unweaver:cli.unweaver']}

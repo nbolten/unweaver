@@ -31,8 +31,8 @@ def test_waypoint_candidates(built_G):
 
     # is a pseudo-edge
     assert candidate.edge1[0] == "-1"
-    # expect exactly this edge - fid 50
-    assert candidate.edge1[2]["fid"] == 50
+    # expect exactly this edge - fid 49
+    assert candidate.edge1[2]["fid"] == 49
     # Double check that it's a sidewalk
     assert candidate.edge1[2]["footway"] == "sidewalk"
     edge1_len = haversine(candidate.edge1[2]["geom"]["coordinates"])
@@ -42,14 +42,14 @@ def test_waypoint_candidates(built_G):
 
     # is a pseudo-edge
     assert candidate.edge2[0] == "-1"
-    # expect exactly this edge - fid 50
-    assert candidate.edge2[2]["fid"] == 50
+    # expect exactly this edge - fid 49
+    assert candidate.edge2[2]["fid"] == 49
     # Double check that it's a sidewalk
     assert candidate.edge2[2]["footway"] == "sidewalk"
     edge2_len = haversine(candidate.edge2[2]["geom"]["coordinates"])
     # There may be slight variation over time in distance calculations, so
     # check if in the right ballpark
-    assert (edge2_len - 19.6) < 0.1
+    assert (edge2_len - 63.49) < 0.1
 
     # Made-up node ID (node will be injected into augmented graph)
     assert candidate.n == "-1"
@@ -60,7 +60,7 @@ def test_waypoint_candidates(built_G):
 
 def test_reverse_edge(built_G):
     example_edge = {
-        "geom": {"type": "LineString", "coordinates": [[0, 1], [1, 0],]},
+        "geom": {"type": "LineString", "coordinates": [[0, 1], [1, 0],],},
         "width": 0.4,
         "incline": 0.1,
     }
@@ -97,7 +97,7 @@ def test_new_edge(built_G):
     geom = LineString(((2, 0), (1, 0),))
 
     d = {
-        "geom": {"type": "LineString", "coordinates": [[3, 0], [1, 0],]},
+        "geom": {"type": "LineString", "coordinates": [[3, 0], [1, 0],],},
         "width": 0.4,
         "incline": 0.1,
         "length": 2,
