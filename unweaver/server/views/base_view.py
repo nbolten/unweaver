@@ -45,8 +45,8 @@ class BaseView:
             interpretation_function = self.profile["reachable"]
         else:
             interpretation_function = self.profile["directions"]
-        result = interpretation_function(*result)
-        return jsonify(result)
+        interpreted_result = interpretation_function(*result)
+        return interpreted_result
 
     def create_view(self) -> Callable:
         profile_args = {
@@ -60,12 +60,15 @@ class BaseView:
 
         @use_args(CombinedSchema(), location="query")
         def view(args: dict) -> Any:
-            if g.get("failed_graph", False):
-                return jsonify({"status": "NoGraph"})
+            if g.get("failed_graph", True):
+                return jsonify({"code": "NoGraph"})
             cost_args = {k: v for k, v in args.items() if k in profile_args}
             cost_function = self.cost_function_generator(**cost_args)
             analysis_result = self.run_analysis(args, cost_function)
 
-            return self.interpret_result(analysis_result)
+            if analysis_result[0] == "NoPath":
+                return jsonify({"code": "NoPath"})
+
+            return jsonify(self.interpret_result(analysis_result))
 
         return view

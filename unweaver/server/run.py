@@ -38,6 +38,12 @@ def setup_app(
 
     profiles = parse_profiles(path)
 
+    try:
+        get_graph(path)
+    except Exception as e:
+        print("Failed to retrieve the graph. Error below.")
+        print(e)
+
     app = create_app()
 
     # TODO: handle 404, 400
@@ -46,6 +52,7 @@ def setup_app(
     @app.before_request
     def before_request() -> None:
         # Create a db connection
+        g.failed_graph = False
         try:
             # TODO: any issues with concurrent connections? Should we share
             # one db connection (DiGraphGPKG instance) vs. reconnecting?
@@ -53,6 +60,7 @@ def setup_app(
                 g.G = get_graph(path)
         except Exception as e:
             # TODO: Check this during startup as well to detect graph issues
+            print("Failed to retrieve the graph. Error below.")
             print(e)
             g.failed_graph = True
 
