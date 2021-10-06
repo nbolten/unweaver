@@ -18,6 +18,7 @@ Fiona = "^1.8.20"
 networkx = "^2.6.3"
 geomet = "^0.3.0"
 pyproj = "^3.2.1"
+osm-humanized-opening-hours = "^0.6.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
