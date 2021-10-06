@@ -6,7 +6,7 @@ from typing import Iterable, List, Optional
 import fiona
 
 from unweaver.exceptions import UnrecognizedFileFormat
-from unweaver.geojson import Feature, LineString
+from unweaver.geojson import LineString
 from unweaver.graph_types import EdgeTuple
 
 
@@ -20,24 +20,6 @@ def edge_generator(
     if changes_sign is None:
         changes_sign = []
 
-    def edge_from_feature(feature: Feature) -> EdgeTuple:
-        props = {k: v for k, v in f["properties"].items() if v is not None}
-        props["geom"] = LineString(f["geometry"]["coordinates"])
-        props["_layer"] = layer
-        props = {k: v for k, v in props.items() if v is not None}
-
-        u = ", ".join(
-            [str(round(c, precision)) for c in f["geometry"]["coordinates"][0]]
-        )
-        v = ", ".join(
-            [
-                str(round(c, precision))
-                for c in f["geometry"]["coordinates"][-1]
-            ]
-        )
-
-        return u, v, props
-
     try:
         with fiona.open(path) as handle:
             for f in handle:
@@ -45,7 +27,7 @@ def edge_generator(
                 # TODO: split MultiLineStrings into multiple LineStrings?
                 if f["geometry"]["type"] != "LineString":
                     continue
-                u, v, props = edge_from_feature(f)
+                u, v, props = edge_from_feature(f, layer, precision)
                 yield u, v, props
                 if add_reverse:
                     props = {**props}
@@ -58,6 +40,36 @@ def edge_generator(
         raise UnrecognizedFileFormat(
             "{} has an unrecognized format.".format(path)
         )
+
+
+def create_node_id(lon: float, lat: float, precision: int) -> str:
+    return f"{round(lon, precision)}, {round(lat, precision)}"
+
+
+def edge_from_feature(feature: dict, layer: str, precision: int) -> EdgeTuple:
+    props = {k: v for k, v in feature["properties"].items() if v is not None}
+    props["geom"] = LineString(feature["geometry"]["coordinates"])
+    props["_layer"] = layer
+    props = {k: v for k, v in props.items() if v is not None}
+
+    # Handle case where _u and _v have been provided by an upstream source:
+    # just use their id. These data are removed from the properties of the
+    # input data so that there is a single source of truth on graph node
+    # identities.
+
+    if "_u" in props:
+        u = props.pop("_u")
+    else:
+        lon, lat = feature["geometry"]["coordinates"][0]
+        u = create_node_id(lon, lat, precision)
+
+    if "_v" in props:
+        v = props.pop("_v")
+    else:
+        lon, lat = feature["geometry"]["coordinates"][-1]
+        v = create_node_id(lon, lat, precision)
+
+    return u, v, props
 
 
 def reverse_linestring(linestring: LineString) -> LineString:
