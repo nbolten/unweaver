@@ -66,8 +66,9 @@ class BaseView:
             cost_function = self.cost_function_generator(**cost_args)
             analysis_result = self.run_analysis(args, cost_function)
 
-            if analysis_result[0] == "NoPath":
-                return jsonify({"code": "NoPath"})
+            for code in ("NoPath", "InvalidWaypoint"):
+                if analysis_result[0] == code:
+                    return jsonify({"code": code})
 
             return jsonify(self.interpret_result(analysis_result))
 

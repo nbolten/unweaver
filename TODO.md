@@ -1,5 +1,7 @@
 ## Bugs
 
+### Create a read-only mode for 'serve'
+
 ### Rework --changes-sign into config-based option like everything else. layers.json?
 
 ### Handle waypoints-on-same-edge case
