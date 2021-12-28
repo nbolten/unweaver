@@ -1,0 +1,5 @@
+.git
+.mypy_cache
+
+example
+tests
