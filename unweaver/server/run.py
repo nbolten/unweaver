@@ -46,8 +46,6 @@ def setup_app(
 
     app = create_app()
 
-    # TODO: handle 404, 400
-
     # Share graph db connection
     @app.before_request
     def before_request() -> None:
