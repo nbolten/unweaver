@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Generic, List, Optional, TypeVar
+from typing import ClassVar, Generic, List, Optional, TypeVar
 
 
 # TODO: Use Annotated[List[float], 2] for length-2 list in Python 3.9+
@@ -8,30 +8,24 @@ Position = List[float]
 
 @dataclass
 class Point:
-    type = "Point"
+    type_: ClassVar[str] = "Point"
     coordinates: Position
 
     def as_dict(self) -> dict:
         data = asdict(self)
-        return_dict = {"type": self.type}
-        for key, value in data.items():
-            if value is not None:
-                return_dict[key] = value
-        return return_dict
+        data["type"] = self.type_
+        return data
 
 
 @dataclass
 class LineString:
-    type = "LineString"
+    type_: ClassVar[str] = "LineString"
     coordinates: List[Position]
 
     def as_dict(self) -> dict:
         data = asdict(self)
-        return_dict = {"type": self.type}
-        for key, value in data.items():
-            if value is not None:
-                return_dict[key] = value
-        return return_dict
+        data["type"] = self.type_
+        return data
 
 
 GeometryType = TypeVar("GeometryType", Point, LineString)
@@ -39,17 +33,14 @@ GeometryType = TypeVar("GeometryType", Point, LineString)
 
 @dataclass
 class Feature(Generic[GeometryType]):
-    type = "Feature"
+    type_: ClassVar[str] = "Feature"
     geometry: GeometryType
     properties: Optional[dict] = None
 
     def as_dict(self) -> dict:
         data = asdict(self)
-        return_dict = {"type": self.type, "properties": self.properties}
-        for key, value in data.items():
-            if value is not None:
-                return_dict[key] = value
-        return return_dict
+        data["type"] = self.type_
+        return data
 
 
 def makePointFeature(
