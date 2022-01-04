@@ -1,5 +1,5 @@
-from dataclasses import dataclass, asdict
-from typing import ClassVar, Generic, List, Optional, TypeVar
+from dataclasses import dataclass, field
+from typing import Generic, List, Literal, TypeVar
 
 
 # TODO: Use Annotated[List[float], 2] for length-2 list in Python 3.9+
@@ -8,24 +8,14 @@ Position = List[float]
 
 @dataclass
 class Point:
-    type_: ClassVar[str] = "Point"
     coordinates: Position
-
-    def as_dict(self) -> dict:
-        data = asdict(self)
-        data["type"] = self.type_
-        return data
+    type: Literal["Point"] = field(default="Point", init=False)
 
 
 @dataclass
 class LineString:
-    type_: ClassVar[str] = "LineString"
     coordinates: List[Position]
-
-    def as_dict(self) -> dict:
-        data = asdict(self)
-        data["type"] = self.type_
-        return data
+    type: Literal["LineString"] = field(default="LineString", init=False)
 
 
 GeometryType = TypeVar("GeometryType", Point, LineString)
@@ -33,14 +23,9 @@ GeometryType = TypeVar("GeometryType", Point, LineString)
 
 @dataclass
 class Feature(Generic[GeometryType]):
-    type_: ClassVar[str] = "Feature"
     geometry: GeometryType
-    properties: Optional[dict] = None
-
-    def as_dict(self) -> dict:
-        data = asdict(self)
-        data["type"] = self.type_
-        return data
+    type: Literal["Feature"] = field(default="Feature", init=False)
+    properties: dict = field(default_factory=dict)
 
 
 def makePointFeature(

@@ -1,16 +1,13 @@
 # Import annotations from __future__ so that circular GeoPackage reference
 # doesn't have to be a string in its hint
 from __future__ import annotations
+from dataclasses import asdict
 from typing import Any, Dict, Generator, Iterable, List, Tuple, TYPE_CHECKING
 
 from click._termui_impl import ProgressBar
 import geomet.wkb
 import pyproj
-from shapely.geometry import (
-    LineString,
-    Point,
-    shape,
-)
+from shapely.geometry import LineString, Point, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
 
@@ -26,11 +23,7 @@ if TYPE_CHECKING:
     from unweaver.databases.geopackage.geopackage import GeoPackage
 
 
-COL_TYPE_MAP = {
-    str: "TEXT",
-    int: "INTEGER",
-    float: "DOUBLE",
-}
+COL_TYPE_MAP = {str: "TEXT", int: "INTEGER", float: "DOUBLE"}
 # FIXME: don't hardcore 26910, discover an appropriate projection based on
 # data. NOTE: this entire strategy is based around having no function to
 # calculate the distance (meters) between a LineString and a point directly. If
@@ -94,7 +87,7 @@ class FeatureTable:
             )
 
             conn.execute(
-                f"""
+                """
                 INSERT INTO gpkg_geometry_columns
                             (
                                 table_name,
@@ -495,7 +488,7 @@ class FeatureTable:
     def write_features(
         self,
         features: Iterable[dict],
-        batch_size: int = 10_000,
+        batch_size: int = 10000,
         counter: ProgressBar = None,
     ) -> None:
         # TODO: Replace Any with sqlite-compatible types
@@ -628,7 +621,7 @@ class FeatureTable:
         elif isinstance(geometry, GeoJSONLineString) or isinstance(
             geometry, GeoJSONPoint
         ):
-            return self._gp_header + geomet.wkb.dumps(geometry.as_dict())
+            return self._gp_header + geomet.wkb.dumps(asdict(geometry))
         elif isinstance(geometry, dict):
             return self._gp_header + geomet.wkb.dumps(geometry)
         else:
