@@ -10,6 +10,7 @@ unweaver = "unweaver:cli.unweaver"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+markupsafe = "2.0.1"
 flask = "^1.1"
 webargs = "^6.1"
 click = "^7.0"

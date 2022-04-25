@@ -28,6 +28,7 @@ install_requires = \
  'click>=7.0,<8.0',
  'flask>=1.1,<2.0',
  'geomet>=0.3.0,<0.4.0',
+ 'markupsafe==2.0.1',
  'networkx>=2.6.3,<3.0.0',
  'osm-humanized-opening-hours>=0.6.2,<0.7.0',
  'pyproj>=3.2.1,<4.0.0',
