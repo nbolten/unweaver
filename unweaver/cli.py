@@ -34,6 +34,7 @@ def build(directory: str, precision: int, changes_sign: List[str]) -> None:
     for path in layers_paths:
         with fiona.open(path) as c:
             n += len(c)
+            click.echo(f"    counted features in {path}")
     # Two edges per feature - forward and reverse
     n *= 2
 
@@ -53,6 +54,7 @@ def build(directory: str, precision: int, changes_sign: List[str]) -> None:
 def weight(directory: str) -> None:
     # TODO: catch errors in starting server
     # TODO: spawn process?
+    click.echo("Collecting data for static weighting...")
     profiles = parse_profiles(directory)
     G = DiGraphGPKG(path=os.path.join(directory, DB_PATH))
     n_profiles = len([p for p in profiles if p["precalculate"]])
