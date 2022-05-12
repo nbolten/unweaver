@@ -1,0 +1,12 @@
+{
+  "id": "preweightedwheelchair",
+  "name": "preweightedwheelchair",
+  "precalculate": true,
+  "static": {
+    "avoidCurbs": true,
+    "uphill": 0.0833,
+    "downhill": 0.1
+  },
+  "cost_function": "cost-wheelchair.py",
+  "directions": "directions-wheelchair.py"
+}

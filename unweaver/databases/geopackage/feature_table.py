@@ -23,7 +23,19 @@ if TYPE_CHECKING:
     from unweaver.databases.geopackage.geopackage import GeoPackage
 
 
-COL_TYPE_MAP = {str: "TEXT", int: "INTEGER", float: "DOUBLE"}
+# TODO: Note that column type is 'none'. This is a workaround for the case
+# where a precalculated weight might try to insert None as the first value for
+# a cost function output, as None = Infinite cost per the current algorithm.
+# In reality, we should be using a better way (or at least an alterantive) for
+# pre-specify column types, not just guessing from values as they are added to
+# the table.
+COL_TYPE_MAP = {
+    str: "TEXT",
+    int: "INTEGER",
+    float: "DOUBLE",
+    type(None): "DOUBLE",
+}
+
 # FIXME: don't hardcore 26910, discover an appropriate projection based on
 # data. NOTE: this entire strategy is based around having no function to
 # calculate the distance (meters) between a LineString and a point directly. If
@@ -589,7 +601,7 @@ class FeatureTable:
     def _column_type(self, value: Any) -> str:
         column_type = COL_TYPE_MAP.get(type(value), None)
         if column_type is None:
-            raise ValueError("Invalid column type")
+            raise ValueError(f"Invalid column type for {type(value)}")
         return column_type
 
     # Instead of Any, use constrained union of types that can be returned by
