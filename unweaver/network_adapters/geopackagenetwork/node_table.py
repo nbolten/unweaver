@@ -8,14 +8,18 @@ from unweaver.graph_types import NodeTuple
 class NodeTable(FeatureTable):
     node_key = "_n"
 
-    def dwithin(
+    def dwithin_nodes(
         self, lon: float, lat: float, distance: float, sort: bool = False
     ) -> Iterable[NodeTuple]:
         rows = super().dwithin(lon, lat, distance, sort=sort)
         return (self._graph_format(row) for row in rows)
 
-    def update(self, nbunch: Iterable[NodeTuple]) -> None:
-        super().update(self.serialize_row(self._table_format(nbunch)))
+    def update_nodes(self, nbunch: Iterable[NodeTuple]) -> None:
+        serialized = [(n, self.serialize_row(d)) for n, d in nbunch]
+        super().update_batch(serialized)
+
+    def update_node(self, key: str, d: dict) -> None:
+        self.update_nodes([(key, d)])
 
     def get_node(self, n: str) -> dict:
         with self.gpkg.connect() as conn:
@@ -32,7 +36,7 @@ class NodeTable(FeatureTable):
                 raise NodeNotFound()
 
     def insert(self, n: str, ddict: Dict[str, Any]) -> None:
-        self.write_features({**ddict, self.node_key: n})
+        self.write_feature({**ddict, self.node_key: n})
         with self.gpkg.connect() as conn:
             conn.execute(
                 f"""
@@ -51,16 +55,16 @@ class NodeTable(FeatureTable):
                 (n,),
             )
 
+    def iter_nodes(self) -> Generator[NodeTuple, None, None]:
+        for row in super().__iter__():
+            yield self._graph_format(row)
+
     def _graph_format(self, row: dict) -> NodeTuple:
         n = row.pop(self.node_key)
         return n, row
 
     def _table_format(
-        self, nbunch: Iterable[NodeTuple],
+        self, nbunch: Iterable[NodeTuple]
     ) -> Generator[dict, None, None]:
         for n, d in nbunch:
             yield {self.node_key: n, **d}
-
-    def __iter__(self) -> Generator[NodeTuple, None, None]:
-        for row in super().__iter__():
-            yield self._graph_format(row)

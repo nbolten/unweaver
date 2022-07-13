@@ -1,5 +1,5 @@
 import os
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from click._termui_impl import ProgressBar
 
@@ -13,7 +13,7 @@ from .get_layers_paths import get_layers_paths
 def build_graph(
     path: str,
     precision: int = 7,
-    changes_sign: Iterable[str] = None,
+    changes_sign: Optional[List[str]] = None,
     counter: Optional[ProgressBar] = None,
 ) -> DiGraphGPKG:
     builder = GraphBuilder(precision=precision, changes_sign=changes_sign)

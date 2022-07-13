@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Iterable, Optional
 import uuid
 
-import networkx as nx
+import networkx as nx  # type: ignore
 
 from unweaver.graph_types import EdgeTuple
 from unweaver.network_adapters import GeoPackageNetwork
@@ -74,14 +74,14 @@ class DiGraphGPKGView(nx.DiGraph):
         # will always attempt to update the database on a per-read basis!
         return (
             (u, v, dict(self.edge_attr_dict_factory(self.network, u, v)))
-            for u, v, d in self.network.edges
+            for u, v, d in self.network.edges.iter_edges()
         )
 
     def edges_dwithin(
         self, lon: float, lat: float, distance: float, sort: bool = False
     ) -> Iterable[EdgeTuple]:
         # TODO: document self.network.edges instead?
-        return self.network.edges.dwithin(lon, lat, distance, sort=sort)
+        return self.network.edges.dwithin_edges(lon, lat, distance, sort=sort)
 
     def to_in_memory(self) -> DiGraphGPKGView:
         # TODO: make into 'copy' method instead, taking path as a parameter?

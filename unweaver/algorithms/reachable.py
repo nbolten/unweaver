@@ -6,7 +6,7 @@ from typing import (
     TypedDict,
 )
 
-from shapely.geometry import mapping, shape
+from shapely.geometry import mapping, shape  # type: ignore
 
 from unweaver.geo import cut_off
 from unweaver.geojson import LineString

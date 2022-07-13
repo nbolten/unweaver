@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import os
 from typing import Callable, Iterable, Optional
 
-from shapely.geometry import LineString, Point, mapping, shape
+from shapely.geometry import LineString, Point, mapping, shape  # type: ignore
 
 from unweaver.constants import DB_PATH, DWITHIN
 from unweaver.geo import cut
@@ -93,7 +93,9 @@ def waypoint_candidates(
     # Implement priority queue-based "true nearest neighbors" idea inspired by
     # rtree implementations.
     # TODO: directly extract nodes as well?
-    edge_candidates = G.network.edges.dwithin(lon, lat, dwithin, sort=True)
+    edge_candidates = G.network.edges.dwithin_edges(
+        lon, lat, dwithin, sort=True
+    )
 
     for i, c in enumerate(edge_candidates):
         if (i + 1) > n:

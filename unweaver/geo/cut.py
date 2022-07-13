@@ -1,7 +1,7 @@
 """Function to cut Shapely LineStrings at a distance along them."""
 from typing import List, Iterator, Tuple
 
-from shapely.geometry import LineString
+from shapely.geometry import LineString  # type: ignore
 
 
 def cut(line: LineString, distance: float) -> List[Iterator[float]]:

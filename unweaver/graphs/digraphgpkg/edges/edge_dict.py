@@ -30,7 +30,7 @@ class EdgeDict(MutableMapping):
     # TODO: create set of GPKG-serializable values rather than using Any
     def __setitem__(self, key: str, value: Any) -> None:
         if self.u is not None and self.v is not None:
-            self.network.edges.update(((self.u, self.v, {key: value}),))
+            self.network.edges.update_edge(self.u, self.v, {key: value})
         else:
             raise UninitializedEdgeError(
                 "Attempted to set attrs on uninitialized edge."
@@ -38,7 +38,7 @@ class EdgeDict(MutableMapping):
 
     def __delitem__(self, key: str) -> None:
         if self.u is not None and self.v is not None:
-            self.network.edges.update(((self.u, self.v, {key: None},),))
+            self.network.edges.update_edge(self.u, self.v, {key: None})
         else:
             raise UninitializedEdgeError(
                 "Attempted to delete attrs on uninitialized edge."

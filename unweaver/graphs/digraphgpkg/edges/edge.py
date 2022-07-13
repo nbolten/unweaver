@@ -34,7 +34,7 @@ class Edge(EdgeView, MutableMapping):
             self.ddict.update(kwargs)
 
     def sync_to_db(self) -> None:
-        self.network.edges.update([(self.u, self.v, dict(self.ddict))])
+        self.network.edges.update_edge(self.u, self.v, dict(self.ddict))
 
     # TODO: use set of GeoPackage-serializable values instad of Any
     def __setitem__(self, key: str, value: Any) -> None:

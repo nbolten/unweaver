@@ -10,7 +10,7 @@ from typing import Any, Dict, Generator
 from unweaver.databases.geopackage.feature_table import FeatureTable
 from .geom_types import GeoPackageGeoms
 
-GPKG_APPLICATION_ID = 1196444487
+GPKG_APPLICATION_ID = 1_196_444_487
 GPKG_USER_VERSION = 10200
 # FIXME: don't hardcore in-meters SRID, discover an appropriate projection
 #        based on data.
@@ -23,9 +23,18 @@ class GeoPackage:
     VERSION = 0
     EMPTY = 1
 
-    def __init__(self, path: str):
-        self.path = path
-        self._get_connection()
+    def __init__(self, path: str = None):
+        if path is None:
+            # TODO: revisit this behavior. Creating a temporary file by default
+            #       may be undesirable.
+            # Create a temporary path, get the name
+            _, path = tempfile.mkstemp(suffix=".gpkg")
+            self.path = str(path)
+            # Delete the path to prepare for fresh db
+            os.remove(path)
+        else:
+            self.path = path
+
         self._setup_database()
 
         self.feature_tables = {}
@@ -69,36 +78,27 @@ class GeoPackage:
         table = self.feature_tables.pop(name)
         table.drop_tables()
 
-    def _get_connection(self) -> None:
-        conn = sqlite3.connect(self.path, uri=True)
+    @contextlib.contextmanager
+    def connect(self) -> Generator[sqlite3.Connection, None, None]:
+        # FIXME: monitor connection and ensure that it is good. Handle
+        #        in-memory case.
+        conn = sqlite3.connect(
+            self.path, uri=True, isolation_level="IMMEDIATE"
+        )
+        conn.execute("PRAGMA journal_mode = 'wal'")
         conn.enable_load_extension(True)
         # Spatialite used for rtree-based functions (MinX, etc). Can eventually
         # replace or make configurable with other extensions.
         conn.load_extension("mod_spatialite.so")
         conn.row_factory = self._dict_factory
-        self.conn = conn
-
-    @contextlib.contextmanager
-    def connect(self) -> Generator[sqlite3.Connection, None, None]:
-        # FIXME: monitor connection and ensure that it is good. Handle
-        #        in-memory case.
-        yield self.conn
-        self.conn.commit()
+        yield conn
+        conn.commit()
         # FIXME: downsides of not calling conn.close? It's necessary to note
         #        call conn.close for in-memory databases. May want to change
         #        this behavior depending on whether the db is on-disk or
         #        in-memory.
 
     def _setup_database(self) -> None:
-        if self.path is None:
-            # TODO: revisit this behavior. Creating a temporary file by default
-            #       may be undesirable.
-            # Create a temporary path, get the name
-            _, path = tempfile.mkstemp(suffix=".gpkg")
-            self.path = str(path)
-            # Delete the path to prepare for fresh db
-            os.remove(path)
-
         if self._is_empty_database():
             self._create_database()
 

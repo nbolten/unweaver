@@ -7,7 +7,7 @@ from typing import (
     Tuple,
 )
 
-from networkx.algorithms.shortest_paths import single_source_dijkstra
+from networkx.algorithms.shortest_paths import single_source_dijkstra  # type: ignore
 
 from unweaver.geojson import Point
 from unweaver.graph_types import EdgeData, CostFunction

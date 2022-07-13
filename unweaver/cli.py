@@ -3,7 +3,7 @@ import os
 from typing import List
 
 import click
-import fiona
+import fiona  # type: ignore
 
 from unweaver.constants import DB_PATH
 from unweaver.build.build_graph import build_graph

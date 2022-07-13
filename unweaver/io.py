@@ -3,7 +3,7 @@ on low-memory reading."""
 import os
 from typing import Iterable, List, Optional
 
-import fiona
+import fiona  # type: ignore
 
 from unweaver.exceptions import UnrecognizedFileFormat
 from unweaver.geojson import LineString

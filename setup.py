@@ -5,6 +5,7 @@ packages = \
 ['unweaver',
  'unweaver.algorithms',
  'unweaver.build',
+ 'unweaver.databases',
  'unweaver.databases.geopackage',
  'unweaver.fields',
  'unweaver.geo',
@@ -33,7 +34,7 @@ install_requires = \
  'osm-humanized-opening-hours>=0.6.2,<0.7.0',
  'pyproj>=3.2.1,<4.0.0',
  'shapely>=1.6,<2.0',
- 'webargs>=6.1,<7.0']
+ 'webargs>=7.0,<8.0']
 
 entry_points = \
 {'console_scripts': ['unweaver = unweaver:cli.unweaver']}

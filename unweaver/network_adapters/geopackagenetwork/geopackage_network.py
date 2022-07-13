@@ -111,10 +111,7 @@ class GeoPackageNetwork:
         return True
 
     def add_edges(
-        self,
-        edges: Iterable[EdgeTuple],
-        batch_size: int = 10_000,
-        **attr: Any,
+        self, edges: Iterable[EdgeTuple], batch_size: int = 10000, **attr: Any
     ) -> None:
         """Add edges to the network.
 

@@ -98,4 +98,4 @@ class DiGraphGPKG(DiGraphGPKGView):
     def update_edges(self, ebunch: Iterable[EdgeTuple]) -> None:
         # FIXME: this doesn't actually work. Implement update / upsert
         #        logic for GeoPackage feature tables, then use that.
-        self.network.edges.update(ebunch)
+        self.network.edges.update_edges(ebunch)

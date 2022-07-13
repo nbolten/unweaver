@@ -20,7 +20,7 @@ class Nodes(NodesView, MutableMapping):
 
     def __setitem__(self, key: str, ddict: dict) -> None:
         if key in self:
-            self.network.nodes.update(((key, ddict),))
+            self.network.nodes.update_node(key, ddict)
         else:
             self.network.nodes.insert(key, ddict)
 

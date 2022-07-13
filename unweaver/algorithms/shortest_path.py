@@ -10,8 +10,8 @@ from typing import (
     Tuple,
 )
 
-import networkx as nx
-from networkx.algorithms.shortest_paths import multi_source_dijkstra
+import networkx as nx  # type: ignore
+from networkx.algorithms.shortest_paths import multi_source_dijkstra  # type: ignore
 
 from unweaver.augmented import AugmentedDiGraphGPKGView
 from unweaver.geojson import Feature, Point

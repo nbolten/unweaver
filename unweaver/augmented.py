@@ -12,7 +12,7 @@ from typing import (
     Set,
 )
 
-import networkx as nx
+import networkx as nx  # type: ignore
 
 from unweaver.geojson import Point
 from unweaver.graph import ProjectedNode

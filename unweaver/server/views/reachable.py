@@ -2,7 +2,7 @@ from typing import List, Mapping, Tuple, Union
 
 from flask import g
 from marshmallow import Schema, fields
-from shapely.geometry import mapping
+from shapely.geometry import mapping  # type: ignore
 
 from unweaver.augmented import prepare_augmented, AugmentedDiGraphGPKGView
 from unweaver.geojson import Feature, Point, makePointFeature

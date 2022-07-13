@@ -3,7 +3,7 @@ from typing import Any, Dict, Generator, Iterable, List, Tuple
 from click._termui_impl import ProgressBar
 
 from unweaver.databases.geopackage.feature_table import FeatureTable
-from unweaver.graph_types import EdgeTuple
+from unweaver.graph_types import EdgeData, EdgeTuple
 
 # FIXME: define Row type to make serialization/deserializaiton and mapping
 # easier to type
@@ -16,7 +16,7 @@ class EdgeTable(FeatureTable):
     def write_features(
         self,
         features: Iterable[dict],
-        batch_size: int = 10_000,
+        batch_size: int = 10000,
         counter: ProgressBar = None,
     ) -> None:
         # FIXME: should fill a nodes queue instead of realizing a full list at
@@ -26,7 +26,7 @@ class EdgeTable(FeatureTable):
 
         for feature in features:
             if len(ways_queue) >= batch_size:
-                super().write_features(ways_queue, 10_000, counter)
+                super().write_features(ways_queue, 10000, counter)
                 self.gpkg.feature_tables["nodes"].write_features(nodes_queue)
                 ways_queue = []
                 nodes_queue = []
@@ -48,13 +48,13 @@ class EdgeTable(FeatureTable):
         self.gpkg.feature_tables["nodes"].write_features(nodes_queue)
         super().write_features(ways_queue, batch_size, counter)
 
-    def dwithin(
+    def dwithin_edges(
         self, lon: float, lat: float, distance: float, sort: bool = False
     ) -> Iterable[EdgeTuple]:
         rows = super().dwithin(lon, lat, distance, sort=sort)
         return (self._graph_format(row) for row in rows)
 
-    def update(self, ebunch: Iterable[EdgeTuple]) -> None:
+    def update_edges(self, ebunch: Iterable[EdgeTuple]) -> None:
         with self.gpkg.connect() as conn:
             fids = []
             # TODO: investigate whether this is a slow step
@@ -77,6 +77,9 @@ class EdgeTable(FeatureTable):
             ddicts.append(ddict)
 
         super().update_batch(zip(fids, ddicts))
+
+    def update_edge(self, u: str, v: str, d: EdgeData) -> None:
+        self.update_edges([(u, v, d)])
 
     def successor_nodes(self, n: str = None) -> List[str]:
         with self.gpkg.connect() as conn:
@@ -196,20 +199,20 @@ class EdgeTable(FeatureTable):
                 (u, v),
             )
 
+    def iter_edges(self) -> Generator[EdgeTuple, None, None]:
+        for row in super().__iter__():
+            yield self._graph_format(row)
+
     def _graph_format(self, row: dict) -> EdgeTuple:
         u = row.pop(self.u_key)
         v = row.pop(self.v_key)
         return u, v, row
 
     def _table_format(
-        self, ebunch: Iterable[EdgeTuple],
+        self, ebunch: Iterable[EdgeTuple]
     ) -> Generator[dict, None, None]:
         for u, v, d in ebunch:
             ddict = {self.u_key: u, self.v_key: v, **d}
             if "fid" in ddict:
                 ddict.pop("fid")
             yield ddict
-
-    def __iter__(self) -> Generator[EdgeTuple, None, None]:
-        for row in super().__iter__():
-            yield self._graph_format(row)

@@ -10,7 +10,7 @@ class InnerPredecessors(InnerPredecessorsView, MutableMapping):
     edge_factory = Edge
 
     def __setitem__(self, key: str, ddict: dict) -> None:
-        self.network.edges.update([(key, self.n, ddict)])
+        self.network.edges.update_edge(key, self.n, ddict)
 
     # def __delitem__(self, key: str) -> None:
     #     self.network.delete_edges((key, self.n))

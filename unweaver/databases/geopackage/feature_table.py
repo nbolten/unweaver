@@ -5,11 +5,11 @@ from dataclasses import asdict
 from typing import Any, Dict, Generator, Iterable, List, Tuple, TYPE_CHECKING
 
 from click._termui_impl import ProgressBar
-import geomet.wkb
+import geomet.wkb  # type: ignore
 import pyproj
-from shapely.geometry import LineString, Point, shape
-from shapely.geometry.base import BaseGeometry
-from shapely.ops import transform
+from shapely.geometry import LineString, Point, shape  # type: ignore
+from shapely.geometry.base import BaseGeometry  # type: ignore
+from shapely.ops import transform  # type: ignore
 
 from unweaver.geojson import (
     LineString as GeoJSONLineString,
@@ -546,6 +546,9 @@ class FeatureTable:
 
         # Write stragglers
         write_queues()
+
+    def write_feature(self, feature: dict) -> None:
+        self.write_features([feature])
 
     @property
     def _gp_header(self) -> bytes:
