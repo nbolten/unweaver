@@ -76,6 +76,7 @@ class GeoPackageNetwork:
             except sqlite3.OperationalError:
                 # Ignore case where columns already exist
                 pass
+
         with self.gpkg.connect() as conn:
             # NOTE: create these indices later to improve performance?
             conn.execute(
