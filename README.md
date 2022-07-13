@@ -153,6 +153,44 @@ The purpose of the API generator is to translate customized cost functions into
 web API routes and parameters, allowing you to be completely free in how you want
 users to interact with your application.
 
+## Running the example
+
+### Get the data
+
+The example expects there to be a GeoJSON file representing a sidewalk network
+in the `example/layers` directory. You may need to create the `layers`
+directory. Unfortunately, we don't have a consistent place to put this example
+data yet, so to get it please request it from someone at the Taskar Center or
+from the repo author.
+
+### Build the graph
+
+Run `unweaver build ./example` in the main repo. If you are running Unweaver
+as a developer using `poetry`, run `poetry run python -m unweaver build
+./example`.
+
+This will create `example/graph.gpkg`, a GeoPackage that Unweaver can use for
+network queries, including routing.
+
+### Weight the graph
+
+Run `unweaver weight ./example` in the main repo. If you are running Unweaver
+as a developer using `poetry`, run `poetry run python -m unweaver weight
+./example`.
+
+This will update `example/graph.gpkg` with a precalculated weight value for a
+(necessarily non-representative) stereotyped manual wheelchair user.
+
+### Run the web server
+
+Run `unweaver serve ./example` in the main repo. If you are running Unweaver
+as a developer using `poetry`, run `poetry run python -m unweaver server
+./example`.
+
+This will run a Flask web server to which requests to the
+`/directions/<profile>.json`, `/shortest_paths/<profile>.json`, and
+`/reachable/<profile>.json` endpoints may be sent.
+
 ## Contributing
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for information on contributing
