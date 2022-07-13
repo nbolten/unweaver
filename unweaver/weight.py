@@ -28,8 +28,7 @@ def precalculate_weight(
     # FIXME: __setitem__ silently fails on immutable graph
 
     batch: List[EdgeTuple] = []
-    for i, (u, v, d) in enumerate(G.iter_edges()):
-        # Update 100 at a time
+    for u, v, d in G.iter_edges():
         weight = cost_function(u, v, d)
         if len(batch) == 1000:
             G.update_edges(batch)
