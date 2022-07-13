@@ -22,5 +22,4 @@ demos
 
 # Graph builds
 *.gpkg
-
-
+*.gpkg-wal
