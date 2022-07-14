@@ -9,7 +9,6 @@ from typing import (
 from shapely.geometry import mapping, shape  # type: ignore
 
 from unweaver.geo import cut_off
-from unweaver.geojson import LineString
 from unweaver.graph import ProjectedNode, makeNodeID
 from unweaver.graph_types import EdgeData, CostFunction
 from unweaver.graphs import DiGraphGPKGView
@@ -204,7 +203,7 @@ def _make_partial_edge(
     fringe_edge = {**edge}
     cut_geom = cut_off(geom, interpolate_distance)
 
-    fringe_edge[geom_key] = LineString(cut_geom)
+    fringe_edge[geom_key] = {"type": "LineString", "coordinates": cut_geom}
     fringe_point = geom.interpolate(interpolate_distance)
     fringe_node_id = makeNodeID(*fringe_point.coords[0])
 
@@ -212,6 +211,6 @@ def _make_partial_edge(
 
     fringe_edge["_v"] = fringe_node_id
 
-    fringe_edge["length"] = haversine(fringe_edge[geom_key].coordinates)
+    fringe_edge["length"] = haversine(fringe_edge[geom_key]["coordinates"])
 
     return fringe_edge, fringe_node
