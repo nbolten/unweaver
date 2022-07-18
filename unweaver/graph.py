@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import os
 from typing import Callable, Iterable, Optional
 
-from shapely.geometry import LineString, Point, mapping, shape  # type: ignore
+from shapely.geometry import LineString, Point, mapping, shape, Polygon  # type: ignore
 
 from unweaver.constants import DB_PATH, DWITHIN
 from unweaver.geo import cut

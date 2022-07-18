@@ -7,13 +7,14 @@ from typing import Any, Dict, Generator, Iterable, List, Tuple, TYPE_CHECKING
 from click._termui_impl import ProgressBar
 import geomet.wkb  # type: ignore
 import pyproj
-from shapely.geometry import LineString, Point, shape  # type: ignore
+from shapely.geometry import LineString, Point, shape, Polygon  # type: ignore
 from shapely.geometry.base import BaseGeometry  # type: ignore
 from shapely.ops import transform  # type: ignore
 
 from unweaver.geojson import (
     LineString as GeoJSONLineString,
     Point as GeoJSONPoint,
+    Polygon as GeoJSONPolygon,
 )
 from unweaver.utils import haversine
 
