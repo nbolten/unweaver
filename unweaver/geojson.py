@@ -27,6 +27,7 @@ class Feature(Generic[GeometryType]):
     type: Literal["Feature"] = field(default="Feature", init=False)
     properties: dict = field(default_factory=dict)
 
+# TODO: define a Polygon dataclass
 
 def makePointFeature(
     lon: float, lat: float, properties: dict = None

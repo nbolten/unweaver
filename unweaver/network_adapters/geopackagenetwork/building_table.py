@@ -2,6 +2,22 @@ from typing import Any, Dict, Generator, Iterable, List, Tuple
 from unweaver.databases.geopackage.feature_table import FeatureTable
 from unweaver.graph_types import BuildingData, BuildingTuple
 
+"""
+Notes:
+    - Consider putting this in its own module (e.g. in a "unweaver/semantic_table" folder)
+    - Write some tests for this class (and better tests for other classes)
+    - Look at OSM's "building" tag for more information
+    - Consider how someone can declare this into the actual database
+    - Consider what the user needs to provide us to create a building
+        - E.g. assign a weight to a path based on how close it is to a building
+
+Features of a building:
+    - nodes for entrances and exits
+    - height
+    - type of building (e.g. hospital, store, etc.)
+    - TODO: add more ...
+"""
+
 class BuildingTable(FeatureTable):
     building_key = "_b"
 

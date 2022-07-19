@@ -630,20 +630,22 @@ class FeatureTable:
 
             yield d.get(c, None)
 
+    # Put data into database (TODO: test this out for Polygons)
     def _serialize_geometry(self, geometry: BaseGeometry) -> str:
         # TODO: handle fewer types? Should standardize the inputs
-        if isinstance(geometry, LineString) or isinstance(geometry, Point):
+        if isinstance(geometry, LineString) or isinstance(geometry, Point) or isinstance(geometry, Polygon): # normal types
             return self._gp_header + geometry.wkb
-        elif isinstance(geometry, GeoJSONLineString) or isinstance(
+        elif isinstance(geometry, GeoJSONLineString) or isinstance( # GeoJSON types, not a dictionary yet
             geometry, GeoJSONPoint
-        ):
+        ) or isinstance(geometry, GeoJSONPolygon):
             return self._gp_header + geomet.wkb.dumps(asdict(geometry))
-        elif isinstance(geometry, dict):
+        elif isinstance(geometry, dict): # Already a dictionary
             return self._gp_header + geomet.wkb.dumps(geometry)
         else:
             print(type(geometry), geometry)
             raise ValueError("Invalid geometry")
 
+    # Gets data out the database (TODO: test this out for Polygons)
     def _deserialize_geometry(self, geometry: str) -> BaseGeometry:
         # TODO: use geomet's built-in GPKG support?
         header_len = len(self._gp_header)
