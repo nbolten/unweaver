@@ -10,6 +10,7 @@ Notes:
     - Consider how someone can declare this into the actual database
     - Consider what the user needs to provide us to create a building
         - E.g. assign a weight to a path based on how close it is to a building
+    - Design the signature of the (enrichment) function
 
 Features of a building:
     - nodes for entrances and exits

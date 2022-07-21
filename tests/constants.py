@@ -7,7 +7,7 @@ BOOKSTORE_POINT = (-122.313108, 47.661011)
 CAFE_POINT = (-122.313170, 47.657524)
 
 EXAMPLE_NODE = "-122.3154903, 47.6562992"
-EXAMPLE_POLYGON = {
+EXAMPLE_POLYGON = { # TODO: test this out
       "type": "Feature",
       "properties": {},
       "geometry": {
