@@ -18,6 +18,10 @@ class EdgeNotFound(ValueError):
     pass
 
 
+class BuildingNotFound(ValueError):
+    pass
+
+
 class UnknownGeometry(ValueError):
     pass
 

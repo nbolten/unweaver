@@ -8,7 +8,7 @@ from unweaver.databases.geopackage import GeoPackage, GeoPackageGeoms
 from unweaver.graph_types import EdgeTuple
 from .edge_table import EdgeTable
 from .node_table import NodeTable
-
+from .building_table import BuildingTable
 
 class GeoPackageNetwork:
     def __init__(self, path: str = None, srid: int = 4326):
@@ -26,8 +26,12 @@ class GeoPackageNetwork:
         self.nodes = NodeTable(
             self.gpkg, "nodes", GeoPackageGeoms.POINT, srid=srid
         )
+        self.buildings = BuildingTable(
+            self.gpkg, "buildings", GeoPackageGeoms.POLYGON, srid=srid
+        )
         self.gpkg.feature_tables["edges"] = self.edges
         self.gpkg.feature_tables["nodes"] = self.nodes
+        self.gpkg.feature_tables["buildings"] = self.buildings
 
     def copy(self, path: str) -> GeoPackageNetwork:
         self.gpkg.copy(path)
@@ -67,12 +71,28 @@ class GeoPackageNetwork:
             self.gpkg.add_feature_table(
                 "nodes", GeoPackageGeoms.POINT, self.srid
             )
+        
+        try:
+            with self.gpkg.connect() as conn:
+                buildings_table_query = conn.execute(
+                    """
+                    SELECT table_name
+                      FROM gpkg_contents
+                     WHERE table_name = 'buildings'
+                    """
+                )
+                next(buildings_table_query)
+        except StopIteration:
+            self.gpkg.add_feature_table(
+                "buildings", GeoPackageGeoms.POLYGON, self.srid
+            )
 
         with self.gpkg.connect() as conn:
             try:
                 conn.execute("ALTER TABLE nodes ADD _n TEXT")
                 conn.execute("ALTER TABLE edges ADD _u TEXT")
                 conn.execute("ALTER TABLE edges ADD _v TEXT")
+                conn.execute("ALTER TABLE buildings ADD _b TEXT")
             except sqlite3.OperationalError:
                 # Ignore case where columns already exist
                 pass
@@ -83,7 +103,13 @@ class GeoPackageNetwork:
                 """
                 CREATE UNIQUE INDEX IF NOT EXISTS nodes_n_index
                                          ON nodes (_n)
-            """
+                """
+            )
+            conn.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS buildings_b_index
+                                         ON buildings (_b)
+                """
             )
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS edges_u_index ON edges (_u)"
@@ -106,6 +132,20 @@ class GeoPackageNetwork:
         """
         with self.gpkg.connect() as conn:
             query = conn.execute("SELECT _n FROM nodes WHERE _n = ?", (n,))
+            result = query.fetchone()
+        if result is None:
+            return False
+        return True
+
+    def has_building(self, b: str) -> bool:
+        """Check whether a building with id 'b' is in the graph.
+
+        :param b: The building id.
+        :type b: str
+
+        """
+        with self.gpkg.connect() as conn:
+            query = conn.execute("SELECT _b FROM nodes WHERE _b = ?", (b,))
             result = query.fetchone()
         if result is None:
             return False

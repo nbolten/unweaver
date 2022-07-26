@@ -17,17 +17,19 @@ class LineString:
     coordinates: List[Position]
     type: Literal["LineString"] = field(default="LineString", init=False)
 
+# TODO: define a Polygon dataclass
+@dataclass
+class Polygon:
+    coordinates: List[List[Position]]
+    type: Literal["Polygon"] = field(default="Polygon", init=False)
 
-GeometryType = TypeVar("GeometryType", Point, LineString)
-
+GeometryType = TypeVar("GeometryType", Point, LineString, Polygon)
 
 @dataclass
 class Feature(Generic[GeometryType]):
     geometry: GeometryType
     type: Literal["Feature"] = field(default="Feature", init=False)
     properties: dict = field(default_factory=dict)
-
-# TODO: define a Polygon dataclass
 
 def makePointFeature(
     lon: float, lat: float, properties: dict = None
