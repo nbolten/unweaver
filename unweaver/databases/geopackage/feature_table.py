@@ -650,7 +650,7 @@ class FeatureTable:
         # TODO: use geomet's built-in GPKG support?
         header_len = len(self._gp_header)
         wkb = geometry[header_len:]
-        return geomet.wkb.loads(wkb)
+        return geomet.wkb.loads(wkb) # GeoJSON representation (dict)
 
     def serialize_row(self, row: dict) -> dict:
         row = {**row}
