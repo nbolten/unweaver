@@ -7,13 +7,14 @@ from typing import Any, Dict, Generator, Iterable, List, Tuple, TYPE_CHECKING
 from click._termui_impl import ProgressBar
 import geomet.wkb  # type: ignore
 import pyproj
-from shapely.geometry import LineString, Point, shape  # type: ignore
+from shapely.geometry import LineString, Point, shape, Polygon  # type: ignore
 from shapely.geometry.base import BaseGeometry  # type: ignore
 from shapely.ops import transform  # type: ignore
 
 from unweaver.geojson import (
     LineString as GeoJSONLineString,
     Point as GeoJSONPoint,
+    Polygon as GeoJSONPolygon,
 )
 from unweaver.utils import haversine
 
@@ -629,24 +630,33 @@ class FeatureTable:
 
             yield d.get(c, None)
 
+    # Put data into database (TODO: test this out for Polygons)
     def _serialize_geometry(self, geometry: BaseGeometry) -> str:
         # TODO: handle fewer types? Should standardize the inputs
-        if isinstance(geometry, LineString) or isinstance(geometry, Point):
+        if isinstance(geometry, LineString) or isinstance(geometry, Point) or isinstance(geometry, Polygon): # normal types
             return self._gp_header + geometry.wkb
+
+        # GeoJSON types, not a dictionary yet
         elif isinstance(geometry, GeoJSONLineString) or isinstance(
             geometry, GeoJSONPoint
-        ):
+        ) or isinstance(geometry, GeoJSONPolygon):
             return self._gp_header + geomet.wkb.dumps(asdict(geometry))
+        
+        # Already a dictionary
         elif isinstance(geometry, dict):
             return self._gp_header + geomet.wkb.dumps(geometry)
+
         else:
             print(type(geometry), geometry)
             raise ValueError("Invalid geometry")
 
+    # Gets data out the database (TODO: test this out for Polygons)
     def _deserialize_geometry(self, geometry: str) -> BaseGeometry:
         # TODO: use geomet's built-in GPKG support?
         header_len = len(self._gp_header)
         wkb = geometry[header_len:]
+
+        # GeoJSON representation (dict)
         return geomet.wkb.loads(wkb)
 
     def serialize_row(self, row: dict) -> dict:
