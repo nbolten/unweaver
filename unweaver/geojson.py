@@ -17,7 +17,6 @@ class LineString:
     coordinates: List[Position]
     type: Literal["LineString"] = field(default="LineString", init=False)
 
-# TODO: define a Polygon dataclass
 @dataclass
 class Polygon:
     coordinates: List[List[Position]]

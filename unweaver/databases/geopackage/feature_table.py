@@ -635,12 +635,17 @@ class FeatureTable:
         # TODO: handle fewer types? Should standardize the inputs
         if isinstance(geometry, LineString) or isinstance(geometry, Point) or isinstance(geometry, Polygon): # normal types
             return self._gp_header + geometry.wkb
-        elif isinstance(geometry, GeoJSONLineString) or isinstance( # GeoJSON types, not a dictionary yet
+
+        # GeoJSON types, not a dictionary yet
+        elif isinstance(geometry, GeoJSONLineString) or isinstance(
             geometry, GeoJSONPoint
         ) or isinstance(geometry, GeoJSONPolygon):
             return self._gp_header + geomet.wkb.dumps(asdict(geometry))
-        elif isinstance(geometry, dict): # Already a dictionary
+        
+        # Already a dictionary
+        elif isinstance(geometry, dict):
             return self._gp_header + geomet.wkb.dumps(geometry)
+
         else:
             print(type(geometry), geometry)
             raise ValueError("Invalid geometry")
@@ -650,7 +655,9 @@ class FeatureTable:
         # TODO: use geomet's built-in GPKG support?
         header_len = len(self._gp_header)
         wkb = geometry[header_len:]
-        return geomet.wkb.loads(wkb) # GeoJSON representation (dict)
+
+        # GeoJSON representation (dict)
+        return geomet.wkb.loads(wkb)
 
     def serialize_row(self, row: dict) -> dict:
         row = {**row}
