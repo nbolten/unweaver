@@ -9,49 +9,75 @@ summarized in "profiles". Unweaver's costing strategy includes dynamics (as oppo
 to precalculated) edge costs for when profiles need to be heavily parameterized on a
 per-user basis.
 
+If you want to use `unweaver` as a command line application or library, see
+the [installation](#installation) section. If you want to contribute to the
+development of `unweaver` itself, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Installation
 
-### Install non-python dependencies
+`unweaver` can be used as a command line application or a library that can be
+used to develop new applications or analyze geospatial networks in a Jupyter
+notebook.
+
+Regardless of the way you install and use `unweaver`, it has a set of
+non-Python dependencies that will need to be installed on your system first.
+
+- [Go here](#install-non-python-dependencies) to get instructions on installing
+the non-Python dependencies required by `unweaver`.
+
+- [Go here](#install-`unweaver`-as-a-command-line-application ) to get
+instructions on installing `unweaver` as a command line application.
+
+- [Go here](#install-`unweaver`-as-a-library) to get instructions on installing
+`unweaver` as a library.
+
+### Install and configure non-python dependencies
 
 Unweaver depends on the following software packages in order to run:
 
-- SQLite3 (such as `libsqlite3`)
-- SpatiaLite (such as `libspatialite`)
-- GDAL (such as `libgdal`)
-- proj4 (such as `libproj` or `proj`)
+- SQLite: A file-based SQL database and the format of the routable GeoPackage
+created by `unweaver`.
+- SpatiaLite: An extension for SQLite that adds geospatial support.
+- GDAL: A common geospatial library for reading/writing geodata formats.
+- proj4: A common geospatial library for managing map (re)projections.
 
-#### Mac-specific instructions
+#### Platform-specific installation instructions
 
-Unweaver needs to load the SpatiaLite extension for SQLite3, but the version of
-SQLite3 that comes with Macs cannot load extensions by default. You will need
-to:
+*On a Mac using Homebrew:*
 
-1. Install sqlite3 from a third party, such as homebrew: `brew install sqlite3`
-2. After installing (or after running `brew link sqlite3`), follow the
-instructions to set up your PATH and library flag locations to be the homebrew
-ones. This will involve editing your shell's config, usually `.bashrc` or
-`.zshrc`.
-3. Ensure that your environment is set up correctly by opening a new terminal
-and running `which sqlite3`. If the path is `/usr/bin/sqlite3` and not a path
-with the word `Cellar` in it, your environment is not correct and you need to
-(1) run `source .bashrc` (or `.zshrc`) to enable it in your current
-environment, then test again, and (2) troubleshoot your environment until it
-automatically loads your shell config automatically (sometimes a restart is
-required).
-4. Install Python such that it links to this sqlite3 or builds its own with
-extension support. `pyenv` can be configured to do so with some flags. Example
-[here](https://github.com/pyenv/pyenv/issues/1702).
-5. Use this version of Python to set up your `poetry` environment below using
-`poetry env <path/to/your/pyenv/bin/python` or
-`<path/to/your/pyenv/bin/python> -m venv venv` to create a non-poetry custom
-virtual environment.
+    brew install sqlite libspatialite gdal proj
 
-### Install the package
+(See [this troubleshooting on Mac](#can't-load-extensions-on-a-mac) section if
+you still can't load SQLite extensions with `unweaver`)
+
+*On a debian-based distribution:*
+
+    apt install libsqlite3 libspatialite libgdal libproj
+
+#### Enable SQLite extension support in Python
+
+Python may be distributed with or without SQLite and extensions support. For
+example, if you are using [pyenv](https://github.com/pyenv/pyenv) to manage
+your Python installation, you will need to ensure it is
+[built with flags](https://github.com/pyenv/pyenv/issues/1702) enable SQLite
+support.
+
+### Install `unweaver` as a command line application
 
 Unweaver is build with the `poetry` toolkit. When Unweaver is properly released on
 PyPI, installing the module will be as simple as running `poetry add unweaver`. For
 now, it must be installed from this repository. This can be done using either with
 `poetry` (ideal) or `pip` (for backwards compatibility).
+
+#### With `pip`:
+
+This can be done with a one-liner:
+
+    pip install git+https://github.com/nbolten/unweaver.git@f9f4bed#egg=unweaver
+
+Where the `@` entry is the commit. This can also be set to a branch name.
+
+### Install `unweaver` as a library
 
 #### With `poetry`:
 
@@ -191,7 +217,30 @@ This will run a Flask web server to which requests to the
 `/directions/<profile>.json`, `/shortest_paths/<profile>.json`, and
 `/reachable/<profile>.json` endpoints may be sent.
 
-## Contributing
+## Troubleshooting
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for information on contributing
-to the development of `unweaver`.
+### Can't load extensions on a Mac
+
+Unweaver needs to load the SpatiaLite extension for SQLite3, but the version of
+SQLite3 that comes with Macs cannot load extensions by default. You will need
+to:
+
+1. Install sqlite3 from a third party, such as homebrew: `brew install sqlite3`
+2. After installing (or after running `brew link sqlite3`), follow the
+instructions to set up your PATH and library flag locations to be the homebrew
+ones. This will involve editing your shell's config, usually `.bashrc` or
+`.zshrc`.
+3. Ensure that your environment is set up correctly by opening a new terminal
+and running `which sqlite3`. If the path is `/usr/bin/sqlite3` and not a path
+with the word `Cellar` in it, your environment is not correct and you need to
+(1) run `source .bashrc` (or `.zshrc`) to enable it in your current
+environment, then test again, and (2) troubleshoot your environment until it
+automatically loads your shell config automatically (sometimes a restart is
+required).
+4. Install Python such that it links to this sqlite3 or builds its own with
+extension support. `pyenv` can be configured to do so with some flags. Example
+[here](https://github.com/pyenv/pyenv/issues/1702).
+5. Use this version of Python to set up your `poetry` environment below using
+`poetry env <path/to/your/pyenv/bin/python` or
+`<path/to/your/pyenv/bin/python> -m venv venv` to create a non-poetry custom
+virtual environment.
