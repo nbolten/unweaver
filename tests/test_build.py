@@ -8,7 +8,7 @@ from .constants import BUILD_PATH
 
 def test_get_layers_paths():
     paths = get_layers_paths(BUILD_PATH)
-    assert paths == ["./tests/data/build/layers/uw.geojson"]
+    assert paths == ["./example/layers/uw.geojson"]
     with pytest.raises(MissingLayersError):
         get_layers_paths("./tests")
 

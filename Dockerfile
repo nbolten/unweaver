@@ -10,7 +10,9 @@ RUN mkdir -p /unweaver
 COPY ./unweaver /unweaver/unweaver
 COPY ./pyproject.toml /unweaver/pyproject.toml
 COPY ./poetry.lock /unweaver/poetry.lock
+COPY ./requirements.txt /unweaver/requirements.txt
 
+RUN pip install -r /unweaver/requirements.txt
 RUN pip install /unweaver
 
 ENTRYPOINT ["unweaver"]

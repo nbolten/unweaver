@@ -1,6 +1,12 @@
 # Installation
 
-## Non-Python prerequisites
+## With Docker
+
+    docker build -t unweaver https://github.com/nbolten/unweaver.git#main
+
+## With pip or poetry
+
+### Non-Python prerequisites
 
 Unweaver depends on the following software packages in order to run:
 
@@ -10,7 +16,7 @@ created by `unweaver`.
 - GDAL: A common geospatial library for reading/writing geodata formats.
 - proj4: A common geospatial library for managing map (re)projections.
 
-### Platform-specific prerequisites installation
+#### Platform-specific prerequisites installation
 
 *On a Mac using Homebrew:*
 
@@ -23,7 +29,7 @@ you still can't load SQLite extensions with `unweaver`)
 
     apt install libsqlite3 libspatialite libgdal libproj
 
-### Enable SQLite extension support in Python
+#### Enable SQLite extension support in Python
 
 Python may be distributed with or without SQLite and extensions support. For
 example, if you are using [pyenv](https://github.com/pyenv/pyenv) to manage
@@ -36,7 +42,7 @@ PyPI, installing the module will be as simple as running `poetry add unweaver`. 
 now, it must be installed from this repository. This can be done using either with
 `poetry` (ideal) or `pip` (for backwards compatibility).
 
-## With `pip`:
+### With `pip`:
 
 This can be done with a one-liner:
 
@@ -44,7 +50,7 @@ This can be done with a one-liner:
 
 Where the `@` entry is the commit. This can also be set to a branch name.
 
-## With `poetry`:
+### With `poetry`:
 
 Edit your `pyproject.toml` to include a line like this under
 [tool.poetry.dependencies]:

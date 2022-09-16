@@ -1,22 +1,40 @@
 # Quickstart
 
-## Create a minimal project directory
+## With pip-installed Unweaver
 
-    mkdir -p my-project/layers
-    echo '{ "id": "my-profile" }' > my-project/profile-my.json
+### Clone the git repo to get an example project directory
 
-## Put data in the project directory
+    git clone https://github.com/nbolten/unweaver
+    cd unweaver
 
-    cp /path/to/a/linestring.geojson my-project/layers/
+### Build a routable geopackage
 
-## Build a routable geopackage
+    unweaver build ./example
 
-    unweaver build ./my-project
+### Start the Unweaver web server
 
-## Start the Unweaver web server
+    unweaver serve ./example
 
-    unweaver serve ./my-project
+### Get shortest-path routes!
 
-## Get shortest-path routes!
+    curl "http://localhost:8000/shortest_path/distance.json?lon1=-122.313108&lat1=47.661011&lon2=-122.313170&lat2=47.65724"
 
-    curl localhost:8000/shortest_path/my-project.json?lon1={lon1}&lat1={lat1}&lon2={lon2}&lat2={lat2}
+## With Docker
+
+### Clone the git repo to get an example project directory
+
+    git clone https://github.com/nbolten/unweaver
+    cd unweaver
+
+### Build a routable geopackage
+
+    docker run --rm -v $(pwd)/example:/project unweaver build /project
+
+### Start the Unweaver web server
+
+    docker run --rm -v $(pwd)/example:/project:ro -p 8000:8000 unweaver serve -h 0.0.0.0 /project
+
+### Get shortest-path routes!
+
+    curl "http://localhost:8000/shortest_path/distance.json?lon1=-122.313108&lat1=47.661011&lon2=-122.313170&lat2=47.65724"
+

@@ -1,10 +1,5 @@
-from typing import Any, Dict
-
-
-def cost_fun_generator(
-    avoidCurbs: bool = True, uphill: float = 0.083, downhill: float = -0.1
-):
-    def cost_fun(u: str, v: str, d: Dict[str, Any]):
+def cost_fun_generator(avoidCurbs=True, uphill=0.083, downhill=-0.1):
+    def cost_fun(u, v, d):
         # No curb ramps? No route
         if d["footway"] == "crossing" and not d["curbramps"]:
             return None
