@@ -2,6 +2,8 @@
 
 ![Unweaver logo](docs/assets/logo.svg)
 
+Visit https://unweaver.org for the official documentation.
+
 Unweaver is a routing engine focused on flexibility. It can read many data formats
 (including OpenStreetMap), find shortest-path routes via a web API, and allows
 completely customizable combinations of cost functions and directions specifications,
