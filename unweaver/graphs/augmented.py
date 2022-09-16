@@ -8,8 +8,9 @@ from typing import (
     Callable,
     Dict,
     Iterator,
-    Optional,
     Set,
+    Type,
+    TypeVar,
 )
 
 import networkx as nx  # type: ignore
@@ -17,6 +18,9 @@ import networkx as nx  # type: ignore
 from unweaver.geojson import Point
 from unweaver.graph import ProjectedNode
 from unweaver.graphs.digraphgpkg import DiGraphGPKGView
+
+
+T = TypeVar("T", bound="AugmentedDiGraphGPKGView")
 
 
 # TODO: create a module with single class per file
@@ -54,7 +58,7 @@ class AugmentedNodesView(Mapping):
 class AugmentedOuterSuccessorsView(Mapping):
     mapping_attr = "_succ"
 
-    def __init__(self, _G: DiGraphGPKGView, _G_overlay: dict):
+    def __init__(self, _G: DiGraphGPKGView, _G_overlay: nx.DiGraph):
         self.mapping = getattr(_G, self.mapping_attr)
         self.mapping_overlay = getattr(_G_overlay, self.mapping_attr)
 
@@ -88,6 +92,27 @@ class AugmentedOuterPredecessorsView(AugmentedOuterSuccessorsView):
 
 
 class AugmentedDiGraphGPKGView(nx.DiGraph):
+    """A wrapper over DiGraphGPKGView that allows for overlaying an in-memory
+    DiGraph but with a seamless interface. When querying the graph, such as
+    asking for a particular edge based on a (u, d) pair (G[u][v]), an
+    AugmentedDiGraphGPKGView will first attempt to retrieve this edge from
+    the in-memory DiGraph, then check the DiGraphGPKGView.
+
+    This wrapper is particularly useful for adding temporary nodes and edges
+    for the purposes of running a graph analysis algorithm. For example,
+    Unweaver uses AugmentedDiGraphGPKGView when it's necessary to start
+    "part-way along" an edge for a shortest-path query using Dijkstra's
+    algorithm. There is often no on-graph node near the physical locationfrom
+    which someone wants to begin searching for shortest paths, so Unweaver
+    creates two new temporary edges starting from the nearest point on the
+    nearest edge, connecting them to the on-graph nodes for that edge, and
+    creates an AugmentedDiGraphGPKGView using those temporary edges.
+
+    :param G: A DiGraphGPKGView, usually the main graph data.
+    :param G_overlay: A dict-of-dict-of-dicts (or networkx.DiGraph) to overlay.
+
+    """
+
     node_dict_factory: Callable = AugmentedNodesView
     adjlist_outer_dict_factory: Callable = AugmentedOuterSuccessorsView
     # In networkx, inner adjlist is only ever invoked without parameters in
@@ -97,9 +122,9 @@ class AugmentedDiGraphGPKGView(nx.DiGraph):
     adjlist_inner_dict_factory = dict
     edge_attr_dict_factory: Callable = dict
 
-    def __init__(self, G: DiGraphGPKGView, G_overlay: Optional[dict] = None):
-        if G_overlay is None:
-            G_overlay = {}
+    def __init__(
+        self, G: DiGraphGPKGView, G_overlay: nx.DiGraph,
+    ):
         # The factories of nx dict-likes need to be informed of the connection
         setattr(
             self,
@@ -130,28 +155,38 @@ class AugmentedDiGraphGPKGView(nx.DiGraph):
 
         self.network = G.network
 
+    @classmethod
+    def prepare_augmented(
+        cls: Type[T], G: DiGraphGPKGView, candidate: ProjectedNode
+    ) -> T:
+        """Create an AugmentedDiGraphGPKGView based on a DiGraphGPKGView and
+        a start point candidatee (a ProjectedNode class instance). This will
+        embed an overlay node and two edges.
 
-def prepare_augmented(
-    G: DiGraphGPKGView, candidate: ProjectedNode
-) -> AugmentedDiGraphGPKGView:
-    temp_edges = []
-    if candidate.edge1 is not None:
-        temp_edges.append(candidate.edge1)
-    if candidate.edge2 is not None:
-        temp_edges.append(candidate.edge2)
+        :param G: The base DiGraphGPKGView.
+        :param candidate: The potential start point candidate.
 
-    if temp_edges:
+        """
+        temp_edges = []
+        if candidate.edges_in:
+            for e in candidate.edges_in:
+                temp_edges.append(e)
+        if candidate.edges_out:
+            for e in candidate.edges_out:
+                temp_edges.append(e)
+
         G_overlay = nx.DiGraph()
-        G_overlay.add_edges_from(temp_edges)
-        for u, v, d in temp_edges:
-            # TODO: 'add_edges_from' should automatically add geometry info to
-            #       nodes. This is a workaround for the fact that it doesn't.
-            G_overlay.nodes[u][G.network.nodes.geom_column] = Point(
-                d[G.network.edges.geom_column]["coordinates"][0]
-            )
-            G_overlay.nodes[v][G.network.nodes.geom_column] = Point(
-                d[G.network.edges.geom_column]["coordinates"][-1]
-            )
-        G = AugmentedDiGraphGPKGView(G=G, G_overlay=G_overlay)
+        if temp_edges:
+            G_overlay.add_edges_from(temp_edges)
+            for u, v, d in temp_edges:
+                # TODO: 'add_edges_from' should automatically add geometry info
+                # to nodes. This is a workaround for the fact that it doesn't.
+                G_overlay.nodes[u][G.network.nodes.geom_column] = Point(
+                    d[G.network.edges.geom_column]["coordinates"][0]
+                )
+                G_overlay.nodes[v][G.network.nodes.geom_column] = Point(
+                    d[G.network.edges.geom_column]["coordinates"][-1]
+                )
+        G_augmented = AugmentedDiGraphGPKGView(G=G, G_overlay=G_overlay)
 
-    return G
+        return G_augmented

@@ -10,10 +10,8 @@ class Node(NodeView, MutableMapping):
     assignment.
 
     :param n: Node ID.
-    :type n: str
     :param _network: Underlying graph container with the same signature as
                      unweaver.network_adapters.GeoPackageNetwork.
-    :type _network: unweaver.network_adapters.GeoPackageNetwork
 
     """
 

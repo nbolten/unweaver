@@ -21,7 +21,7 @@ from unweaver.utils import haversine
 from .geom_types import GeoPackageGeoms
 
 if TYPE_CHECKING:
-    from unweaver.databases.geopackage.geopackage import GeoPackage
+    from unweaver.geopackage.geopackage import GeoPackage
 
 
 # TODO: Note that column type is 'none'. This is a workaround for the case
@@ -156,15 +156,10 @@ class FeatureTable:
         """Finds features intersecting a bounding box.
 
         :param left: left coordinate of bounding box.
-        :type left: float
         :param bottom: bottom coordinate of bounding box.
-        :type bottom: float
         :param right: right coordinate of bounding box.
-        :type right: float
         :param top: top coordinate of bounding box.
-        :type top: float
         :returns: Generator of copies of edge data (represented as dicts).
-        :rtype: generator of dicts
 
         """
         with self.gpkg.connect() as conn:
@@ -204,13 +199,9 @@ class FeatureTable:
         exact distance.
 
         :param lon: The longitude of the query point.
-        :type lon: float
         :param lat: The latitude of the query point.
-        :type lat: float
         :param distance: distance from point to search ('DWithin').
-        :type distance: float
         :returns: Generator of copies of edge data (represented as dicts).
-        :rtype: generator of dicts
 
         """
         # NOTE: Because these transformations are each in one dimension,
@@ -238,15 +229,10 @@ class FeatureTable:
         """Finds features within some distance of a point using a bounding box.
 
         :param lon: The longitude of the query point.
-        :type lon: float
         :param lat: The latitude of the query point.
-        :type lat: float
         :param distance: distance from point to search ('DWithin').
-        :type distance: float
         :param sort: Sort the results by distance (nearest first).
-        :type sort: bool
         :returns: Generator of copies of edge data (represented as dicts).
-        :rtype: generator of dicts
 
         """
         # FIXME: check for existence of rtree and if it doesn't exist, raise
@@ -633,15 +619,21 @@ class FeatureTable:
     # Put data into database (TODO: test this out for Polygons)
     def _serialize_geometry(self, geometry: BaseGeometry) -> str:
         # TODO: handle fewer types? Should standardize the inputs
-        if isinstance(geometry, LineString) or isinstance(geometry, Point) or isinstance(geometry, Polygon): # normal types
+        if (
+            isinstance(geometry, LineString)
+            or isinstance(geometry, Point)
+            or isinstance(geometry, Polygon)
+        ):  # normal types
             return self._gp_header + geometry.wkb
 
         # GeoJSON types, not a dictionary yet
-        elif isinstance(geometry, GeoJSONLineString) or isinstance(
-            geometry, GeoJSONPoint
-        ) or isinstance(geometry, GeoJSONPolygon):
+        elif (
+            isinstance(geometry, GeoJSONLineString)
+            or isinstance(geometry, GeoJSONPoint)
+            or isinstance(geometry, GeoJSONPolygon)
+        ):
             return self._gp_header + geomet.wkb.dumps(asdict(geometry))
-        
+
         # Already a dictionary
         elif isinstance(geometry, dict):
             return self._gp_header + geomet.wkb.dumps(geometry)
@@ -683,7 +675,6 @@ class FeatureTable:
         constraints.
 
         :returns: SQLite Template String
-        :rtype: str
         """
         feature_table_columns = self._get_column_names()
         columns = ", ".join(feature_table_columns)

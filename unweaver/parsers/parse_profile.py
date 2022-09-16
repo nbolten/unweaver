@@ -9,7 +9,6 @@ def parse_profiles(directory: str) -> List[Profile]:
     """Parse all profiles in a directory - all files matching profle-*.json
 
     :param directory: Directory (path) from which to parse profiles.
-    :type directory: str
 
     """
     # TODO: add something to catch "no profiles found", possibly help users
@@ -26,7 +25,6 @@ def parse_profile(path: str) -> Profile:
     """Parse a single profile.
 
     :param path: File path from which to parse profiles.
-    :type path: str
 
     """
     working_path = os.path.dirname(path)

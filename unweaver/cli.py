@@ -20,15 +20,29 @@ def unweaver() -> None:
 
 
 @unweaver.command()
-@click.argument("directory", type=click.Path())
-@click.option("--precision", default=7)
-@click.option("--changes-sign", multiple=True)
-def build(directory: str, precision: int, changes_sign: List[str]) -> None:
+@click.argument("project_directory", type=click.Path())
+@click.option(
+    "--precision",
+    default=7,
+    help="Latitude-longitude coordinate rounding precision for whether dataset polylines are connected.",
+)
+@click.option(
+    "--changes-sign",
+    multiple=True,
+    help="A property whose sign should be flipped when reversing an edge. "
+    "Example: a positive steepness/incline field value should be made negative for the reverse edge.",
+)
+def build(
+    project_directory: str, precision: int, changes_sign: List[str]
+) -> None:
+    """Build a routable GeoPackage (graph.gpkg in the project directory) from
+    the data in the `{project}/layers` directory.
+    """
     click.echo("Estimating feature count...")
     # TODO: catch errors in starting server
     # TODO: spawn process?
 
-    layers_paths = get_layers_paths(directory)
+    layers_paths = get_layers_paths(project_directory)
 
     n = 0
     for path in layers_paths:
@@ -38,9 +52,11 @@ def build(directory: str, precision: int, changes_sign: List[str]) -> None:
     # Two edges per feature - forward and reverse
     n *= 2
 
+    click.echo(f"Creating {n} edges from {n // 2} features")
+
     with click.progressbar(length=n, label="Importing features") as bar:
         build_graph(
-            directory,
+            project_directory,
             precision=precision,
             changes_sign=changes_sign,
             counter=bar,
@@ -50,14 +66,15 @@ def build(directory: str, precision: int, changes_sign: List[str]) -> None:
 
 
 @unweaver.command()
-@click.argument("directory", type=click.Path())
-def weight(directory: str) -> None:
+@click.argument("project_directory", type=click.Path())
+def weight(project_directory: str) -> None:
+    """Precalculate all static weights for all profiles in a project."""
     # TODO: catch errors in starting server
     # TODO: spawn process?
     click.echo("Collecting data for static weighting...")
-    profiles = parse_profiles(directory)
-    G = DiGraphGPKG(path=os.path.join(directory, DB_PATH))
-    n_profiles = len([p for p in profiles if p["precalculate"]])
+    profiles = parse_profiles(project_directory)
+    G = DiGraphGPKG(path=os.path.join(project_directory, DB_PATH))
+    n_profiles = len([p for p in profiles if p.get("precalculate", False)])
     n = G.size() * n_profiles
     with click.progressbar(length=n, label="Computing static weights") as bar:
         for profile in profiles:
@@ -69,12 +86,29 @@ def weight(directory: str) -> None:
 
 
 @unweaver.command()
-@click.argument("directory", type=click.Path())
-@click.option("--host", "-h", default="localhost")
-@click.option("--port", "-p", default=8000)
-@click.option("--debug", is_flag=True)
-def serve(directory: str, host: str, port: str, debug: bool = False) -> None:
-    click.echo(f"Starting server in {directory}...")
+@click.argument("project_directory", type=click.Path())
+@click.option(
+    "--host",
+    "-h",
+    default="localhost",
+    help="Host on which to run the server.",
+)
+@click.option(
+    "--port", "-p", default=8000, help="Port on which to run the server."
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    help="Whether to run the server with in-browser error tracebacks.",
+)
+def serve(
+    project_directory: str, host: str, port: str, debug: bool = False
+) -> None:
+    """Run a web server with auto-generated web API endpoints that return
+    JSON for shortest-path routes, shortest-path trees, and reachable trees
+    for every profile in a project.
+    """
+    click.echo(f"Starting server in {project_directory}...")
     # TODO: catch errors in starting server
     # TODO: spawn process?
-    run_app(directory, host=host, port=port, debug=debug)
+    run_app(project_directory, host=host, port=port, debug=debug)

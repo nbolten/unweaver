@@ -25,20 +25,18 @@ class ProfileArg(TypedDict):
 
 
 class RequiredProfile(TypedDict):
-    name: str
     id: str
 
 
-# TODO: Callable type signatures for directions, shortest_paths, reachabel
 # TODO: cost_function property vs. cost_function_generator is ambiguous
 class OptionalProfile(TypedDict, total=False):
     args: List[ProfileArg]
     static: Dict[str, fields.Field]
     precalculate: bool
     cost_function: Callable[..., CostFunction]
-    directions: Callable
-    shortest_paths: Callable
-    reachable: Callable
+    shortest_path: Callable
+    shortest_path_tree: Callable
+    reachable_tree: Callable
 
 
 class Profile(OptionalProfile, RequiredProfile):
@@ -58,8 +56,7 @@ class ProfileArgSchema(Schema):
 class ProfileSchema(Schema):
     args = fields.List(fields.Nested(ProfileArgSchema))
     cost_function = fields.Str()
-    directions = fields.Str()
-    name = fields.Str(required=True)
+    shortest_path = fields.Str()
     id = fields.Str(required=True)
     precalculate = fields.Boolean()
     static = fields.Dict(
@@ -83,9 +80,9 @@ class ProfileSchema(Schema):
         user_defined = {}
         for field_name in [
             "cost_function",
-            "directions",
-            "shortest_paths",
-            "reachable",
+            "shortest_path",
+            "shortest_path_tree",
+            "reachable_tree",
         ]:
             function_name = field_name
             if function_name == "cost_function":
@@ -107,12 +104,11 @@ class ProfileSchema(Schema):
         precalculate = data.get("precalculate", False)
 
         profile: Profile = {
-            "name": data["name"],
             "id": data["id"],
             "cost_function": user_defined["cost_function"],
-            "directions": user_defined["directions"],
-            "shortest_paths": user_defined["shortest_paths"],
-            "reachable": user_defined["reachable"],
+            "shortest_path": user_defined["shortest_path"],
+            "shortest_path_tree": user_defined["shortest_path_tree"],
+            "reachable_tree": user_defined["reachable_tree"],
             "precalculate": precalculate,
         }
 

@@ -1,6 +1,5 @@
 {
   "id": "wheelchair",
-  "name": "wheelchair",
   "args": [
     {
       "name": "avoidCurbs",
@@ -16,5 +15,5 @@
     }
   ],
   "cost_function": "cost-wheelchair.py",
-  "directions": "directions-wheelchair.py"
+  "shortest_path": "shortest-path-wheelchair.py"
 }

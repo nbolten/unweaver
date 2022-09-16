@@ -4,26 +4,26 @@ from flask import g
 from marshmallow import Schema, fields
 from shapely.geometry import mapping  # type: ignore
 
-from unweaver.augmented import prepare_augmented, AugmentedDiGraphGPKGView
 from unweaver.geojson import Feature, Point, makePointFeature
+from unweaver.candidates import waypoint_candidates, choose_candidate
 from unweaver.constants import DWITHIN
-from unweaver.graph import waypoint_candidates, choose_candidate
+from unweaver.graphs import AugmentedDiGraphGPKGView
 from unweaver.graph_types import EdgeData, CostFunction
-from unweaver.algorithms.shortest_paths import ReachedNodes
-from unweaver.algorithms.reachable import reachable
+from unweaver.shortest_paths.shortest_path_tree import ReachedNodes
+from unweaver.shortest_paths.reachable_tree import reachable_tree
 
 from .base_view import BaseView
 
 
-class ReachableSchema(Schema):
+class ReachableTreeSchema(Schema):
     lon = fields.Float(required=True)
     lat = fields.Float(required=True)
     max_cost = fields.Float(required=True)
 
 
-class ReachableView(BaseView):
-    view_name = "reachable"
-    schema = ReachableSchema
+class ReachableTreeView(BaseView):
+    view_name = "reachable_tree"
+    schema = ReachableTreeSchema
 
     # TODO: more specific than Mapping
     def run_analysis(
@@ -42,20 +42,18 @@ class ReachableView(BaseView):
         lat = arguments["lat"]
         max_cost = arguments["max_cost"]
 
-        candidates = waypoint_candidates(
-            g.G, lon, lat, 4, is_destination=False, dwithin=DWITHIN
-        )
+        candidates = waypoint_candidates(g.G, lon, lat, 4, dwithin=DWITHIN)
         if candidates is None:
             # TODO: return too-far-away result
             return "InvalidWaypoint"
-        candidate = choose_candidate(candidates, cost_function)
+        candidate = choose_candidate(candidates, "origin", cost_function)
         if candidate is None:
             # TODO: return no-suitable-start-candidates result
             return "InvalidWaypoint"
 
-        G_aug = prepare_augmented(g.G, candidate)
-        if self.profile["precalculate"]:
-            nodes, edges = reachable(
+        G_aug = AugmentedDiGraphGPKGView.prepare_augmented(g.G, candidate)
+        if self.profile.get("precalculate", False):
+            nodes, edges = reachable_tree(
                 G_aug,
                 candidate,
                 cost_function,
@@ -63,7 +61,7 @@ class ReachableView(BaseView):
                 self.precalculated_cost_function,
             )
         else:
-            nodes, edges = reachable(
+            nodes, edges = reachable_tree(
                 G_aug, candidate, cost_function, max_cost, cost_function,
             )
 

@@ -19,13 +19,9 @@ class EdgeView(Mapping):
 
     :param _network: GeoPackageNetwork used for interacting with underlying
                      graph db.
-    :type _network: unweaver.network_adapters.GeoPackageNetwork
     :param _u: first node describing (u, v) edge.
-    :type _u: str
     :param _v: second node describing (u, v) edge.
-    :type _v: str
     :param kwargs: Dict-like data.
-    :type kwargs: dict-like data as keyword arguments.
 
     """
 

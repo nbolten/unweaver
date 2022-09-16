@@ -5,13 +5,14 @@ from typing import (
     NamedTuple,
     Optional,
     Tuple,
+    Union,
 )
 
 from networkx.algorithms.shortest_paths import single_source_dijkstra  # type: ignore
 
 from unweaver.geojson import Point
 from unweaver.graph_types import EdgeData, CostFunction
-from unweaver.graphs import DiGraphGPKGView
+from unweaver.graphs import AugmentedDiGraphGPKGView, DiGraphGPKGView
 
 
 Path = List[str]
@@ -33,8 +34,8 @@ ReachedNodes = Dict[str, ReachedNode]
 Paths = Dict[str, Path]
 
 
-def shortest_paths(
-    G: DiGraphGPKGView,
+def shortest_path_tree(
+    G: Union[AugmentedDiGraphGPKGView, DiGraphGPKGView],
     start_node: str,
     cost_function: CostFunction,
     max_cost: Optional[float] = None,
@@ -44,16 +45,11 @@ def shortest_paths(
     subject to a maximum total "distance"/cost constraint.
 
     :param G: Network graph.
-    :type G: NetworkX-like Graph or DiGraph.
     :param start_node: Start node (on graph) at which to begin search.
-    :type start_node: str
     :param cost_function: NetworkX-compatible weight function.
-    :type cost_function: callable
     :param max_cost: Maximum weight to reach in the tree.
-    :type max_cost: float
     :param precalculated_cost_function: NetworkX-compatible weight function
                                         that represents precalculated weights.
-    :type precalculated_cost_function: callable
 
     """
     if precalculated_cost_function is not None:

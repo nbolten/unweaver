@@ -1,5 +1,5 @@
-from unweaver.augmented import prepare_augmented
-from unweaver.graph import waypoint_candidates
+from unweaver.candidates import waypoint_candidates
+from unweaver.graphs import AugmentedDiGraphGPKGView
 
 from .constants import BOOKSTORE_POINT
 
@@ -12,7 +12,7 @@ def test_augmented(built_G):
     candidates = waypoint_candidates(
         built_G, BOOKSTORE_POINT[0], BOOKSTORE_POINT[1], 1
     )
-    candidate = next(candidates)
+    candidate = next(iter(candidates))
 
     # TODO: Test output
-    prepare_augmented(built_G, candidate)
+    AugmentedDiGraphGPKGView.prepare_augmented(built_G, candidate)

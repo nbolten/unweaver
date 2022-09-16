@@ -37,14 +37,14 @@ class BaseView:
         raise NotImplementedError
 
     def interpret_result(self, result: Any) -> str:
-        if self.view_name == "directions":
-            interpretation_function = self.profile["directions"]
-        elif self.view_name == "shortest_paths":
-            interpretation_function = self.profile["shortest_paths"]
-        elif self.view_name == "reachable":
-            interpretation_function = self.profile["reachable"]
+        if self.view_name == "shortest_path":
+            interpretation_function = self.profile["shortest_path"]
+        elif self.view_name == "shortest_path_tree":
+            interpretation_function = self.profile["shortest_path_tree"]
+        elif self.view_name == "reachable_tree":
+            interpretation_function = self.profile["reachable_tree"]
         else:
-            interpretation_function = self.profile["directions"]
+            interpretation_function = self.profile["shortest_path"]
         interpreted_result = interpretation_function(*result)
         return interpreted_result
 

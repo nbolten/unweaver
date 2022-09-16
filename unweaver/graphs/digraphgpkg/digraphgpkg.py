@@ -17,15 +17,13 @@ from .digraphgpkg_view import DiGraphGPKGView
 
 
 class DiGraphGPKG(DiGraphGPKGView):
-    """Read-only (immutable) version of DiGraphGPKG.
-    :param args: Positional arguments compatible with networkx.DiGraph.
-    :type args: array-like
+    """Mutable directed graph backed by a GeoPackage. An extension of
+    unweaver.graphs.DiGraphGPKGView.
+
     :param path: An optional path to database file (or :memory:-type string).
-    :type path: str
     :param network: An optional path to a custom GeoPackageNetwork instance.
-    :type network: unweaver.network_adapters.GeoPackageNetwork
-    :param kwargs: Keyword arguments compatible with networkx.DiGraph.
-    :type kwargs: dict-like
+    :param **kwargs: Keyword arguments compatible with networkx.DiGraph.
+
     """
 
     node_dict_factory = Nodes
@@ -37,8 +35,8 @@ class DiGraphGPKG(DiGraphGPKGView):
 
     def __init__(
         self,
-        path: str = None,
-        network: GeoPackageNetwork = None,
+        path: Optional[str] = None,
+        network: Optional[GeoPackageNetwork] = None,
         **kwargs: Any
     ):
         # TODO: Consider adding database file existence checker rather than
@@ -61,6 +59,14 @@ class DiGraphGPKG(DiGraphGPKGView):
 
     @classmethod
     def create_graph(cls, path: str = None, **kwargs: Any) -> DiGraphGPKG:
+        """Create a new DiGraphGPKG (.gpkg) at a given path.
+
+        :param path: The path of the new GeoPackage (.gpkg).
+        :param **kwargs: Any other keyword arguments to pass to the new
+        DiGraphGPKG instance.
+        :returns: A new DiGraphGPKG instance.
+
+        """
         network = GeoPackageNetwork(path)
         return DiGraphGPKG(network=network, **kwargs)
 
@@ -74,11 +80,8 @@ class DiGraphGPKG(DiGraphGPKGView):
         """Equivalent to add_edges_from in networkx but with batched SQL writes.
 
         :param ebunch: edge bunch, identical to nx ebunch_to_add.
-        :type ebunch: edge bunch
         :param _batch_size: Number of rows to commit to the database at a time.
-        :type _batch_size: int
-        :param attr: Default attributes, identical to nx attr.
-        :type attr: Any
+        :param **attr: Default attributes, identical to nx attr.
 
         """
         if _batch_size < 2:
@@ -96,6 +99,11 @@ class DiGraphGPKG(DiGraphGPKGView):
         )
 
     def update_edges(self, ebunch: Iterable[EdgeTuple]) -> None:
+        """Update edges as a batch.
+
+        :param ebunch: Any iterable of edge tuples (u, v, d).
+
+        """
         # FIXME: this doesn't actually work. Implement update / upsert
         #        logic for GeoPackage feature tables, then use that.
         self.network.edges.update_edges(ebunch)

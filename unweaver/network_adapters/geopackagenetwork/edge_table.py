@@ -2,7 +2,7 @@ from typing import Any, Dict, Generator, Iterable, List, Tuple
 
 from click._termui_impl import ProgressBar
 
-from unweaver.databases.geopackage.feature_table import FeatureTable
+from unweaver.geopackage.feature_table import FeatureTable
 from unweaver.graph_types import EdgeData, EdgeTuple
 
 # FIXME: define Row type to make serialization/deserializaiton and mapping

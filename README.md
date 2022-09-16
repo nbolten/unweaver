@@ -1,6 +1,6 @@
-## Warning: this software is pre-alpha and subject to massive changes. Pin to commits if you use it.
-
 # Unweaver
+
+![Unweaver logo](docs/assets/logo.svg)
 
 Unweaver is a routing engine focused on flexibility. It can read many data formats
 (including OpenStreetMap), find shortest-path routes via a web API, and allows

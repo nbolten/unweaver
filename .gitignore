@@ -20,6 +20,10 @@ venv
 # Temporary and/or hacking directories
 demos
 
+# Documentation
+site
+
 # Graph builds
 *.gpkg
 *.gpkg-wal
+*.gpkg-journal

@@ -18,7 +18,7 @@ def client(built_G_weighted):
 class TestServer:
     def test_reachable(self, client):
         resp = client.get(
-            "/reachable/distance.json",
+            "/reachable_tree/distance.json",
             query_string={
                 "lon": BOOKSTORE_POINT[0],
                 "lat": BOOKSTORE_POINT[1],
@@ -42,7 +42,7 @@ class TestServer:
         assert total_distance - 2 < 1e-3
 
         resp = client.get(
-            "/reachable/distance.json",
+            "/reachable_tree/distance.json",
             query_string={
                 "lon": BOOKSTORE_POINT[0],
                 "lat": BOOKSTORE_POINT[1],
@@ -64,7 +64,7 @@ class TestServer:
 
     def test_shortest_paths(self, client):
         resp = client.get(
-            "/shortest_paths/distance.json",
+            "/shortest_path_tree/distance.json",
             query_string={
                 "lon": BOOKSTORE_POINT[0],
                 "lat": BOOKSTORE_POINT[1],
@@ -90,7 +90,7 @@ class TestServer:
 
     def test_directions(self, client):
         resp = client.get(
-            "/directions/distance.json",
+            "/shortest_path/distance.json",
             query_string={
                 "lon1": BOOKSTORE_POINT[0],
                 "lat1": BOOKSTORE_POINT[1],

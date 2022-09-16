@@ -14,7 +14,7 @@ def precalculate_weights(directory: str) -> None:
     G = DiGraphGPKG(path=os.path.join(directory, DB_PATH))
     for profile in profiles:
         if profile["precalculate"]:
-            weight_column = f"_weight_{profile['name']}"
+            weight_column = f"_weight_{profile['id']}"
             precalculate_weight(G, weight_column, profile["cost_function"])
 
 

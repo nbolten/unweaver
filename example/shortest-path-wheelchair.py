@@ -5,7 +5,7 @@ from unweaver.graph_types import EdgeTuple
 from unweaver.graphs.digraphgpkg import DiGraphGPKGView
 
 
-def directions(
+def shortest_path(
     status: str,
     G: DiGraphGPKGView = None,
     origin: Feature[Point] = None,

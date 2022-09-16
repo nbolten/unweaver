@@ -10,9 +10,7 @@ def cut(line: LineString, distance: float) -> List[Iterator[float]]:
     than the LineString, a list with the original LineString is produced.
 
     :param line: LineString to cut.
-    :type line: shapely.geometry.LineString
     :param distance: Distance along the line where it will be cut.
-    :type distance: float
 
     """
     if distance <= 0.0 or distance >= line.length:
@@ -52,9 +50,7 @@ def cut_off(line: LineString, distance: float) -> List[List[float]]:
     than the LineString, a list with the original LineString is produced.
 
     :param line: LineString to cut.
-    :type line: shapely.geometry.LineString
     :param distance: Distance along the line where it will be cut.
-    :type distance: float
 
     """
     if distance <= 0.0 or distance >= line.length:
@@ -91,9 +87,7 @@ def _point_distance(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
     """Distance between two points (l2 norm).
 
     :param p1: Point 1.
-    :type p1: list of floats
     :param p2: Point 2.
-    :type p2: list of floats
 
     """
     dx = p2[0] - p1[0]

@@ -4,13 +4,13 @@ from flask import g
 from marshmallow import Schema, fields
 from shapely.geometry import mapping  # type: ignore
 
-from unweaver.augmented import prepare_augmented, AugmentedDiGraphGPKGView
+from unweaver.candidates import waypoint_candidates, choose_candidate
 from unweaver.constants import DWITHIN
 from unweaver.geojson import Feature, Point, makePointFeature
-from unweaver.graph import waypoint_candidates, choose_candidate
+from unweaver.graphs import AugmentedDiGraphGPKGView
 from unweaver.graph_types import CostFunction, EdgeData
-from unweaver.algorithms.shortest_paths import (
-    shortest_paths,
+from unweaver.shortest_paths.shortest_path_tree import (
+    shortest_path_tree,
     ReachedNode,
     ReachedNodes,
 )
@@ -18,15 +18,15 @@ from unweaver.algorithms.shortest_paths import (
 from .base_view import BaseView
 
 
-class ShortestPathsSchema(Schema):
+class ShortestPathTreeSchema(Schema):
     lon = fields.Float(required=True)
     lat = fields.Float(required=True)
     max_cost = fields.Float(required=True)
 
 
-class ShortestPathsView(BaseView):
-    view_name = "shortest_paths"
-    schema = ShortestPathsSchema
+class ShortestPathTreeView(BaseView):
+    view_name = "shortest_path_tree"
+    schema = ShortestPathTreeSchema
 
     def run_analysis(
         self, arguments: Mapping, cost_function: CostFunction
@@ -45,21 +45,19 @@ class ShortestPathsView(BaseView):
         lat = arguments["lat"]
         max_cost = arguments["max_cost"]
 
-        candidates = waypoint_candidates(
-            g.G, lon, lat, 4, is_destination=False, dwithin=DWITHIN
-        )
+        candidates = waypoint_candidates(g.G, lon, lat, 4, dwithin=DWITHIN)
         if candidates is None:
             # TODO: return too-far-away result
             # TODO: normalize return type to be mapping with optional keys
             return "InvalidWaypoint"
-        candidate = choose_candidate(candidates, cost_function)
+        candidate = choose_candidate(candidates, "origin", cost_function)
         if candidate is None:
             # TODO: return no-suitable-start-candidates result
             return "InvalidWaypoint"
 
-        G_aug = prepare_augmented(g.G, candidate)
-        if self.profile["precalculate"]:
-            reached_nodes, paths, edges = shortest_paths(
+        G_aug = AugmentedDiGraphGPKGView.prepare_augmented(g.G, candidate)
+        if self.profile.get("precalculate", False):
+            reached_nodes, paths, edges = shortest_path_tree(
                 G_aug,
                 candidate.n,
                 cost_function,
@@ -67,7 +65,7 @@ class ShortestPathsView(BaseView):
                 self.precalculated_cost_function,
             )
         else:
-            reached_nodes, paths, edges = shortest_paths(
+            reached_nodes, paths, edges = shortest_path_tree(
                 G_aug, candidate.n, cost_function, max_cost, cost_function,
             )
 

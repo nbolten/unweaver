@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, Collection, Dict, Iterable, List
 import sqlite3
 
-from unweaver.databases.geopackage import GeoPackage, GeoPackageGeoms
+from unweaver.geopackage import GeoPackage, GeoPackageGeoms
 from unweaver.graph_types import EdgeTuple
 from .edge_table import EdgeTable
 from .node_table import NodeTable
@@ -100,7 +100,6 @@ class GeoPackageNetwork:
     def has_node(self, n: str) -> bool:
         """Check whether a node with id 'n' is in the graph.
         :param n: The node id.
-        :type n: str
         """
         with self.gpkg.connect() as conn:
             query = conn.execute("SELECT _n FROM nodes WHERE _n = ?", (n,))
@@ -116,12 +115,9 @@ class GeoPackageNetwork:
         :param edges: an iterable of 2-tuples or 3-tuples representing (u, v)
                       or (u, v, d) edges (as expected by NetworkX). Iterable
                       can mix both edge types.
-        :type edges: iterable
         :param batch_size: Size of batches to write downstream.
-        :type batch_size: int
         :param attr: Any default attributes to add to all edges. If any
                      attributes conflict with edge data, edge data supercedes.
-        :type attr: dict
         """
         node_queue: List[Dict[str, Collection[str]]] = []
         edge_queue: List[dict] = []

@@ -12,7 +12,6 @@ class NodesView(Mapping):
 
     :param _network: Underlying graph container with the same signature as
                      unweaver.network_adapters.GeoPackageNetwork.
-    :type _network: unweaver.network_adapters.GeoPackageNetwork
 
     """
 

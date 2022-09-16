@@ -1,7 +1,7 @@
 from typing import Any, Dict, Generator, Iterable
 
 from unweaver.exceptions import NodeNotFound
-from unweaver.databases.geopackage.feature_table import FeatureTable
+from unweaver.geopackage.feature_table import FeatureTable
 from unweaver.graph_types import NodeTuple
 
 

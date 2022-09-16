@@ -7,7 +7,7 @@ import sqlite3
 import tempfile
 from typing import Any, Dict, Generator
 
-from unweaver.databases.geopackage.feature_table import FeatureTable
+from .feature_table import FeatureTable
 from .geom_types import GeoPackageGeoms
 
 GPKG_APPLICATION_ID = 1_196_444_487
@@ -20,6 +20,14 @@ TO_SRID = 3740
 
 
 class GeoPackage:
+    """A Python interface to a GeoPackage, an SQLite-format OGC standard for
+    geospatial vector data.
+
+    :param path: Path to a GeoPackage (ends with .gpkg). If the path does not
+    exist, it will be created.
+
+    """
+
     VERSION = 0
     EMPTY = 1
 
@@ -69,12 +77,24 @@ class GeoPackage:
     def add_feature_table(
         self, name: str, geom_type: GeoPackageGeoms, srid: int = 4326
     ) -> FeatureTable:
+        """Create a new layer (feature table) in the GeoPackage.
+
+        :param name: Name of the new layer.
+        :param geom_type: Geometry type of the new layer.
+        :srid: SRID (projection).
+
+        """
         table = FeatureTable(self, name, geom_type, srid=srid)
         table.create_tables()
         self.feature_tables[name] = table
         return table
 
     def drop_feature_table(self, name: str) -> None:
+        """Delete a layer (feature table) by name.
+
+        :param name: Name of the layer.
+
+        """
         table = self.feature_tables.pop(name)
         table.drop_tables()
 
@@ -205,7 +225,6 @@ class GeoPackage:
 
         :param path: Path to the new database. Any SQLite connection string can
                      be used.
-        :type path: str
 
         """
         # TODO: catch the "memory" string and ensure that it includes a name

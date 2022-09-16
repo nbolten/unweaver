@@ -1,6 +1,5 @@
 {
   "id": "preweightedwheelchair",
-  "name": "preweightedwheelchair",
   "precalculate": true,
   "static": {
     "avoidCurbs": true,
@@ -8,5 +7,5 @@
     "downhill": 0.1
   },
   "cost_function": "cost-wheelchair.py",
-  "directions": "directions-wheelchair.py"
+  "shortest_path": "shortest-path-wheelchair.py"
 }

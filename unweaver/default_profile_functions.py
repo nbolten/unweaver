@@ -3,7 +3,7 @@ from typing import List, Optional
 from unweaver.geojson import Feature, Point
 from unweaver.graph_types import EdgeData, CostFunction
 from unweaver.graphs import DiGraphGPKG, DiGraphGPKGView
-from unweaver.algorithms.shortest_paths import Paths, ReachedNodes
+from unweaver.shortest_paths.shortest_path_tree import Paths, ReachedNodes
 
 # TODO: consider what this might look like with building tables included
 # Challenge: there are multiple ways to do this
@@ -16,7 +16,7 @@ def cost_function_generator() -> CostFunction:
     return cost_function
 
 
-def directions(
+def shortest_path(
     status: str,
     G: DiGraphGPKG,
     origin: Feature[Point],
@@ -34,7 +34,7 @@ def directions(
     }
 
 
-def shortest_paths(
+def shortest_path_tree(
     status: str,
     G: DiGraphGPKGView,
     origin: Feature[Point],
@@ -75,7 +75,7 @@ def shortest_paths(
 
 
 # TODO: constrain output to be JSON or JSON-like?
-def reachable(
+def reachable_tree(
     status: str,
     G: DiGraphGPKGView,
     origin: Feature[Point],

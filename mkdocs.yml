@@ -1,0 +1,53 @@
+site_name: Unweaver
+repo_name: nbolten/unweaver
+repo_url: https://github.com/nbolten/unweaver
+theme:
+  name: material
+  logo: assets/logo.svg
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.tabs
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: "sphinx"
+            show_root_heading: true
+            heading_level: 2
+markdown_extensions:
+  - mkdocs-click
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started.md
+    - Quickstart: quickstart.md
+    - Configure a project: configure-a-project.md
+  - CLI Reference: cli-reference.md
+  - Library Reference:
+    - Graphs: library-graphs.md
+    - Build: library-build.md
+    - Shortest paths: library-shortest-paths.md
+    - GeoPackage: library-geopackage.md
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/nbolten

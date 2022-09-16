@@ -5,6 +5,7 @@ from typing import (
     Optional,
     Tuple,
     TypedDict,
+    Union,
 )
 
 from shapely.geometry import mapping, shape  # type: ignore
@@ -13,10 +14,10 @@ from unweaver.geo import cut_off
 from unweaver.geojson import LineString
 from unweaver.graph import ProjectedNode, makeNodeID
 from unweaver.graph_types import EdgeData, CostFunction
-from unweaver.graphs import DiGraphGPKGView
+from unweaver.graphs import AugmentedDiGraphGPKGView, DiGraphGPKGView
 from unweaver.utils import haversine
-from .shortest_paths import (
-    shortest_paths,
+from .shortest_path_tree import (
+    shortest_path_tree,
     BaseNode,
     ReachedNode,
 )
@@ -28,8 +29,8 @@ class FringeCandidate(TypedDict):
     proportion: float
 
 
-def reachable(
-    G: DiGraphGPKGView,
+def reachable_tree(
+    G: Union[AugmentedDiGraphGPKGView, DiGraphGPKGView],
     candidate: ProjectedNode,
     cost_function: CostFunction,
     max_cost: float,
@@ -41,26 +42,21 @@ def reachable(
     nodes at the ends.
 
     :param G: Network graph.
-    :type G: NetworkX-like Graph or DiGraph.
     :param candidate: On-graph candidate metadata as created by
                       waypoint_candidates.
-    :type candidate: dict
     :param cost_function: NetworkX-compatible weight function.
-    :type cost_function: callable
     :param max_cost: Maximum weight to reach in the tree.
-    :type max_cost: float
     :param precalculated_cost_function: NetworkX-compatible weight function
                                         that represents precalculated weights.
-    :type precalculated_cost_function: callable
 
     """
     # TODO: reuse these edges - lookup of edges from graph is often slowest
     if precalculated_cost_function is None:
-        nodes, paths, edges = shortest_paths(
+        nodes, paths, edges = shortest_path_tree(
             G, candidate.n, cost_function, max_cost
         )
     else:
-        nodes, paths, edges = shortest_paths(
+        nodes, paths, edges = shortest_path_tree(
             G, candidate.n, precalculated_cost_function, max_cost
         )
 

@@ -40,14 +40,11 @@ The `unweaver` package is developed using the
 [`black`](https://github.com/psf/black) autoformatter. `black` is automaticaly
 installed with `poetry install`.
 
-### Generating a setup.py file
+## Adding documentation
 
-`unweaver` includes a `setup.py` file for legacy build support. It is
-(re)generated whenever the `pyproject.toml` or `poetry.lock` files are changed
-via a pre-commit hook.
-
-### Generating requirements.txt files
-
-For legacy purposes, `requirements.txt` and `requirements-dev.txt` files are
-automatically generated via a pre-commit hook whenever the `pyproject.toml` or
-`poetry.lock` files are changed.
+When the `unweaver` API changes (or when you just want to make the docs
+better!), please update this package's documentation! This project uses
+[Material for MkDocs](https://squidfunk.github.io/mkdocs-material/). To run
+the dev server for creating new docs, run `poetry run mkdocs serve` and visit
+`localhost:8000`. Changes made to `/docs` and docstrings will be reflected
+there.

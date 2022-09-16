@@ -1,15 +1,23 @@
+import os
 from typing import List, Optional, Tuple, Union
 
 import flask
 from flask import g
 
+from unweaver.constants import DB_PATH
+from unweaver.graphs import DiGraphGPKGView
 from unweaver.server.app import create_app
-from unweaver.graph import get_graph
 from unweaver.parsers import parse_profiles
 from .views import add_views
 
 
 Header = Tuple[str, str]
+
+
+def _get_graph(base_path: str) -> DiGraphGPKGView:
+    db_path = os.path.join(base_path, DB_PATH)
+
+    return DiGraphGPKGView(path=db_path)
 
 
 def run_app(
@@ -39,7 +47,7 @@ def setup_app(
     profiles = parse_profiles(path)
 
     try:
-        get_graph(path)
+        _get_graph(path)
     except Exception as e:
         print("Failed to retrieve the graph. Error below.")
         print(e)
@@ -55,7 +63,7 @@ def setup_app(
             # TODO: any issues with concurrent connections? Should we share
             # one db connection (DiGraphGPKG instance) vs. reconnecting?
             if "G" not in g:
-                g.G = get_graph(path)
+                g.G = _get_graph(path)
         except Exception as e:
             # TODO: Check this during startup as well to detect graph issues
             print("Failed to retrieve the graph. Error below.")
