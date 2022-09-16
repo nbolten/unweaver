@@ -8,18 +8,24 @@ repos:
       exclude: "setup.py"
 -   repo: local
     hooks:
-    - id: pytest
-      name: pytest
-      language: system
-      entry: pytest
-      pass_filenames: false
-      always_run: true
-      stages: [commit, push]
     - id: mypy
       name: mypy
       language: system
       files: ^unweaver/
       entry: mypy unweaver/
+      pass_filenames: false
+      always_run: true
+      stages: [commit, push]
+    - id: export_requirements
+      name: export_requirements
+      entry: "poetry export -f requirements.txt --output requirements.txt --without-hashes"
+      language: system
+      files: "^pyproject.toml$|^poetry.lock$"
+      pass_filenames: false
+    - id: pytest
+      name: pytest
+      language: system
+      entry: pytest
       pass_filenames: false
       always_run: true
       stages: [commit, push]

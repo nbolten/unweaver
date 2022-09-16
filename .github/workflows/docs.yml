@@ -1,0 +1,18 @@
+name: docs
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - run: pip install mkdocs-material mkdocs-click mkdocstrings[python]
+      - run: pip install -r https://raw.githubusercontent.com/nbolten/unweaver/main/requirements.txt
+      - run: pip install git+https://github.com/nbolten/unweaver.git
+      - run: mkdocs gh-deploy --force
