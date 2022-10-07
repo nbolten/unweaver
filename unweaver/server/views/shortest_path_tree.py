@@ -50,7 +50,7 @@ class ShortestPathTreeView(BaseView):
             # TODO: return too-far-away result
             # TODO: normalize return type to be mapping with optional keys
             return "InvalidWaypoint"
-        candidate = choose_candidate(candidates, "origin", cost_function)
+        candidate = choose_candidate(g.G, candidates, "origin", cost_function)
         if candidate is None:
             # TODO: return no-suitable-start-candidates result
             return "InvalidWaypoint"
@@ -66,7 +66,7 @@ class ShortestPathTreeView(BaseView):
             )
         else:
             reached_nodes, paths, edges = shortest_path_tree(
-                G_aug, candidate.n, cost_function, max_cost, cost_function,
+                G_aug, candidate.n, cost_function, max_cost, cost_function
             )
 
         geom_key = g.G.network.nodes.geom_column
@@ -75,7 +75,7 @@ class ShortestPathTreeView(BaseView):
             node_attr = G_aug.nodes[node_id]
             # TODO: figure out why we're retrieving attrs from G_aug here?
             nodes[node_id] = ReachedNode(
-                key=node_id, geom=node_attr[geom_key], cost=reached_node.cost,
+                key=node_id, geom=node_attr[geom_key], cost=reached_node.cost
             )
         origin = makePointFeature(*mapping(candidate.geometry)["coordinates"])
 

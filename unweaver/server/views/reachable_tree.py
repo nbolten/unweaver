@@ -46,7 +46,7 @@ class ReachableTreeView(BaseView):
         if candidates is None:
             # TODO: return too-far-away result
             return "InvalidWaypoint"
-        candidate = choose_candidate(candidates, "origin", cost_function)
+        candidate = choose_candidate(g.G, candidates, "origin", cost_function)
         if candidate is None:
             # TODO: return no-suitable-start-candidates result
             return "InvalidWaypoint"
@@ -62,7 +62,7 @@ class ReachableTreeView(BaseView):
             )
         else:
             nodes, edges = reachable_tree(
-                G_aug, candidate, cost_function, max_cost, cost_function,
+                G_aug, candidate, cost_function, max_cost, cost_function
             )
 
         origin = makePointFeature(*mapping(candidate.geometry)["coordinates"])

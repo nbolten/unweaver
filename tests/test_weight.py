@@ -11,12 +11,12 @@ TEST_EDGES = [
 DISTANCE_WEIGHTS = [72.8, 70.7, 12.5]
 
 
-def test_precalculate_weights(built_G):
+def test_precalculate_weights(built_G_weighted):
     # TODO: create fixture for this type of context: graph + profiles
-    precalculate_weights(BUILD_PATH)
+    # precalculate_weights(BUILD_PATH)
     # Now weights should exist. Check one - distance.
     for (u, v), weight in zip(TEST_EDGES, DISTANCE_WEIGHTS):
-        d = built_G[u][v]
+        d = built_G_weighted[u][v]
         assert d["_weight_distance"] == weight
 
     # TODO: test more weights and profiles

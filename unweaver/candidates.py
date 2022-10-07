@@ -180,11 +180,12 @@ def create_temporary_node(
     edges_out = (edge2, edge1_rev)
 
     return ProjectedNode(
-        node_id, point, edges_in=edges_in, edges_out=edges_out,
+        node_id, point, edges_in=edges_in, edges_out=edges_out
     )
 
 
 def choose_candidate(
+    G: DiGraphGPKGView,
     candidates: Iterable[ProjectedNode],
     context: Literal["origin", "destination", "both"] = "origin",
     edge_filter: CostFunction = lambda _, __, ___: True,
@@ -202,7 +203,29 @@ def choose_candidate(
         if not candidate.edges_in and not candidate.edges_out:
             # The candidate is an on-graph node: no extra costs to account for,
             # just start/end at this node during shortest path search.
+            if (context == "origin") or (context == "both"):
+                is_invalid = True
+                u = candidate.n
+                for v, d in G[u]:
+                    cost = edge_filter(u, v, d)
+                    if cost is not None:
+                        is_invalid = False
+                        break
+                if is_invalid:
+                    continue
+
+            if (context == "destination") or (context == "both"):
+                is_invalid = True
+                v = candidate.n
+                for u, d in G.predecessors[v]:
+                    cost = edge_filter(u, v, d)
+                    if cost is not None:
+                        is_invalid = False
+                        break
+                if is_invalid:
+                    continue
             return candidate
+
         else:
             # Candidate is along an edge.
             if context == "destination":
