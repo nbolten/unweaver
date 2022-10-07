@@ -1,12 +1,5 @@
 from dataclasses import asdict
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Dict, List, Optional, Tuple, TypedDict, Union
 
 from shapely.geometry import mapping, shape  # type: ignore
 
@@ -16,11 +9,7 @@ from unweaver.graph import ProjectedNode, makeNodeID
 from unweaver.graph_types import EdgeData, CostFunction
 from unweaver.graphs import AugmentedDiGraphGPKGView, DiGraphGPKGView
 from unweaver.utils import haversine
-from .shortest_path_tree import (
-    shortest_path_tree,
-    BaseNode,
-    ReachedNode,
-)
+from .shortest_path_tree import shortest_path_tree, BaseNode, ReachedNode
 
 
 class FringeCandidate(TypedDict):

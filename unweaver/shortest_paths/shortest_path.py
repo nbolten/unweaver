@@ -72,7 +72,7 @@ def waypoint_nodes(
             context = "both"
         else:
             context = "destination"
-        graph_wp = choose_candidate(wp_candidates, context, cost_function)
+        graph_wp = choose_candidate(G, wp_candidates, context, cost_function)
 
         nodes.append(graph_wp)
 

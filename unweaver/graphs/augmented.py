@@ -3,15 +3,7 @@
 from collections.abc import Mapping
 from itertools import chain
 from functools import partial
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterator,
-    Set,
-    Type,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, Iterator, Set, Type, TypeVar
 
 import networkx as nx  # type: ignore
 
@@ -122,9 +114,7 @@ class AugmentedDiGraphGPKGView(nx.DiGraph):
     adjlist_inner_dict_factory = dict
     edge_attr_dict_factory: Callable = dict
 
-    def __init__(
-        self, G: DiGraphGPKGView, G_overlay: nx.DiGraph,
-    ):
+    def __init__(self, G: DiGraphGPKGView, G_overlay: nx.DiGraph):
         # The factories of nx dict-likes need to be informed of the connection
         setattr(
             self,

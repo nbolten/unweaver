@@ -9,7 +9,7 @@ def test_reachable_tree(built_G):
     candidates = waypoint_candidates(
         built_G, BOOKSTORE_POINT[0], BOOKSTORE_POINT[1], 10
     )
-    candidate = choose_candidate(candidates, "origin", cost_fun)
+    candidate = choose_candidate(built_G, candidates, "origin", cost_fun)
 
     assert candidate is not None
 
