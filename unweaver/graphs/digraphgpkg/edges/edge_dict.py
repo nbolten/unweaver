@@ -10,9 +10,7 @@ from unweaver.exceptions import UninitializedEdgeError
 class EdgeDict(MutableMapping):
     """A mutable mapping that always syncs to/from the database edges table."""
 
-    def __init__(
-        self, _network: GeoPackageNetwork, _u: str, _v: str,
-    ):
+    def __init__(self, _network: GeoPackageNetwork, _u: str, _v: str):
         self.network = _network
         self.u = _u
         self.v = _v

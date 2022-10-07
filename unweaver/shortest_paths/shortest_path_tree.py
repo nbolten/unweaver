@@ -1,14 +1,8 @@
-from typing import (
-    Dict,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 
-from networkx.algorithms.shortest_paths import single_source_dijkstra  # type: ignore
+from networkx.algorithms.shortest_paths import ( # type: ignore
+    single_source_dijkstra,
+)
 
 from unweaver.geojson import Point
 from unweaver.graph_types import EdgeData, CostFunction

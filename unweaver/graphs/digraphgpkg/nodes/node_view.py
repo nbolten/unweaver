@@ -14,9 +14,7 @@ class NodeView(Mapping):
 
     """
 
-    def __init__(
-        self, _n: str, _network: GeoPackageNetwork,
-    ):
+    def __init__(self, _n: str, _network: GeoPackageNetwork):
         self.n = _n
         self.network = _network
 
