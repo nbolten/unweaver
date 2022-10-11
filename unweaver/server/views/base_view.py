@@ -31,6 +31,10 @@ class BaseView:
         else:
             return None
 
+    # FIXME: don't constrain to Any type: constrain to a union of:
+    #   Tuple[str],
+    #   An extension of Tuple[str, ...]
+    #   (or change return type to make this more straightforward).
     def run_analysis(
         self, arguments: dict, cost_function: CostFunction
     ) -> Any:
@@ -66,9 +70,9 @@ class BaseView:
             cost_function = self.cost_function_generator(**cost_args)
             analysis_result = self.run_analysis(args, cost_function)
 
-            for code in ("NoPath", "InvalidWaypoint"):
-                if analysis_result[0] == code:
-                    return jsonify({"code": code})
+            code = analysis_result[0]
+            if code in ("NoPath", "InvalidWaypoint"):
+                return jsonify({"code": code})
 
             return jsonify(self.interpret_result(analysis_result))
 

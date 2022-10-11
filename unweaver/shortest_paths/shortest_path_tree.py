@@ -1,6 +1,6 @@
 from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 
-from networkx.algorithms.shortest_paths import ( # type: ignore
+from networkx.algorithms.shortest_paths import (  # type: ignore
     single_source_dijkstra,
 )
 
