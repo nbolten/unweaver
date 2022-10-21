@@ -108,11 +108,10 @@ Any file that follows the pattern `cost-*.py` will be assumed to be a Python
 module that defines a "cost function generator", a function with the following
 signature:
 
-    def cost_function_generator(**kwargs: Any) -> Callable[[str, str, dict], Optional[float]]:
+    def cost_function_generator(G: DiGraphGPKGView, **kwargs: Any) -> Callable[[str, str, dict], Optional[float]]:
 
-Where `kwargs` are named parameters are any user-defined inputs needed at
-runtime by the Unweaver web server (you can also define no arguments for this
-function) and `Callable[[str, str, dict], Optional[float]]` is a
+Where `G` is a view on the entire routable graph, `kwargs` are named parameters
+and are any user-defined inputs needed at runtime by the Unweaver web server (you can also define no arguments for this function) and `Callable[[str, str, dict], Optional[float]]` is a
 `networkx` shortest-path algorithm-compatible cost function. Specifically,
 `networkx` shortest-path algorithms expect a cost function to accept the
 start node (`u`, in this case a string), the end node (`v`, also a string), and

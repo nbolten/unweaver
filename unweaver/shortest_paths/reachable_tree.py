@@ -6,7 +6,7 @@ from shapely.geometry import mapping, shape  # type: ignore
 from unweaver.geo import cut_off
 from unweaver.geojson import LineString
 from unweaver.graph import ProjectedNode, makeNodeID
-from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graph_types import CostFunction, EdgeData
 from unweaver.graphs import AugmentedDiGraphGPKGView, DiGraphGPKGView
 from unweaver.utils import haversine
 from .shortest_path_tree import shortest_path_tree, BaseNode, ReachedNode

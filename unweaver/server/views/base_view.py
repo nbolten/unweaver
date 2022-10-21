@@ -67,7 +67,7 @@ class BaseView:
             if g.get("failed_graph", True):
                 return jsonify({"code": "NoGraph"})
             cost_args = {k: v for k, v in args.items() if k in profile_args}
-            cost_function = self.cost_function_generator(**cost_args)
+            cost_function = self.cost_function_generator(g.G, **cost_args)
             analysis_result = self.run_analysis(args, cost_function)
 
             code = analysis_result[0]

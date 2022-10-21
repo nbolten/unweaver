@@ -23,7 +23,7 @@ from unweaver.graphs import (
     DiGraphGPKGView,
 )
 from unweaver.graph import ProjectedNode
-from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graph_types import CostFunction, EdgeData
 from unweaver.constants import DWITHIN
 from unweaver.candidates import choose_candidate, waypoint_candidates
 from unweaver.exceptions import NoPathError

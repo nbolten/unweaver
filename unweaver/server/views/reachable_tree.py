@@ -4,11 +4,11 @@ from flask import g
 from marshmallow import Schema, fields
 from shapely.geometry import mapping  # type: ignore
 
-from unweaver.geojson import Feature, Point, makePointFeature
 from unweaver.candidates import waypoint_candidates, choose_candidate
 from unweaver.constants import DWITHIN
+from unweaver.geojson import Feature, Point, makePointFeature
 from unweaver.graphs import AugmentedDiGraphGPKGView
-from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graph_types import CostFunction, EdgeData
 from unweaver.shortest_paths.shortest_path_tree import ReachedNodes
 from unweaver.shortest_paths.reachable_tree import reachable_tree
 

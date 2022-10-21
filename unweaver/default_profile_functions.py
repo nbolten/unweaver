@@ -1,13 +1,14 @@
 from typing import List, Optional
 
 from unweaver.geojson import Feature, Point
-from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graph_types import CostFunction, EdgeData
 from unweaver.graphs import DiGraphGPKG, DiGraphGPKGView
 from unweaver.shortest_paths.shortest_path_tree import Paths, ReachedNodes
 
+
 # TODO: consider what this might look like with building tables included
 # Challenge: there are multiple ways to do this
-def cost_function_generator() -> CostFunction:
+def cost_function_generator(G: DiGraphGPKGView) -> CostFunction:
     def cost_function(u: str, v: str, d: EdgeData) -> Optional[float]:
         # FIXME: "length" is not guaranteed to exist? Update to
         # calculate a _length attribute for all edges?

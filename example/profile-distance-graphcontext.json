@@ -1,0 +1,5 @@
+{
+  "id": "distance_graphcontext",
+  "cost_function": "cost-distance-graphcontext.py",
+  "precalculate": true
+}

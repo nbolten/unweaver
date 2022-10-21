@@ -5,7 +5,7 @@ from networkx.algorithms.shortest_paths import (  # type: ignore
 )
 
 from unweaver.geojson import Point
-from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graph_types import CostFunction, EdgeData
 from unweaver.graphs import AugmentedDiGraphGPKGView, DiGraphGPKGView
 
 

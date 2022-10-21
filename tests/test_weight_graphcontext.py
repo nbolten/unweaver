@@ -4,10 +4,10 @@ TEST_EDGES = [
     ("-122.3156396, 47.6569496", "-122.3154731, 47.6569503"),
 ]
 
-DISTANCE_WEIGHTS = [72.8, 70.7, 12.5]
+DISTANCE_WEIGHTS = [145.6, 141.4, 25.0]
 
 
-def test_precalculate_weights(built_G_weighted):
+def test_precalculate_weights_graphcontext(built_G_weighted):
     for (u, v), weight in zip(TEST_EDGES, DISTANCE_WEIGHTS):
         d = built_G_weighted[u][v]
-        assert d["_weight_distance"] == weight
+        assert d["_weight_distance_graphcontext"] == weight

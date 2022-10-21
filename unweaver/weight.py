@@ -4,7 +4,7 @@ from typing import Callable, List, Optional
 from click._termui_impl import ProgressBar
 
 from unweaver.constants import DB_PATH
-from unweaver.graph_types import EdgeTuple, CostFunction
+from unweaver.graph_types import CostFunction, EdgeTuple
 from unweaver.graphs import DiGraphGPKG
 from unweaver.parsers import parse_profiles
 
@@ -24,7 +24,7 @@ def precalculate_weight(
     cost_function_generator: Callable[..., CostFunction],
     counter: Optional[ProgressBar] = None,
 ) -> None:
-    cost_function = cost_function_generator()
+    cost_function = cost_function_generator(G)
     # FIXME: __setitem__ silently fails on immutable graph
 
     batch: List[EdgeTuple] = []

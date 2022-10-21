@@ -5,7 +5,7 @@ from marshmallow import Schema, fields
 
 
 from unweaver.graph import ProjectedNode
-from unweaver.graph_types import EdgeData, CostFunction
+from unweaver.graph_types import CostFunction, EdgeData
 from unweaver.geojson import Feature, Point, makePointFeature
 from unweaver.graphs import DiGraphGPKG
 from unweaver.shortest_paths.shortest_path import (
