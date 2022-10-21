@@ -7,10 +7,7 @@ RUN apt-get update && \
       libsqlite3-mod-spatialite
 
 RUN mkdir -p /unweaver
-COPY ./unweaver /unweaver/unweaver
-COPY ./pyproject.toml /unweaver/pyproject.toml
-COPY ./poetry.lock /unweaver/poetry.lock
-COPY ./requirements.txt /unweaver/requirements.txt
+COPY . /unweaver
 
 RUN pip install -r /unweaver/requirements.txt
 RUN pip install /unweaver
