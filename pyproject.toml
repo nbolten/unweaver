@@ -10,10 +10,8 @@ unweaver = "unweaver:cli.unweaver"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-markupsafe = "2.0.1"
-flask = "^1.1"
-jinja2 = "3.0.3"
-webargs = "^7.0"
+flask = "^2.2"
+webargs = "^8.2"
 click = "^8.0"
 shapely = "^1.6"
 Fiona = "^1.8.20"
@@ -21,6 +19,7 @@ networkx = "^2.6.3"
 geomet = "^0.3.0"
 pyproj = "^3.2.1"
 osm-humanized-opening-hours = "^0.6.2"
+Flask = "^2.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

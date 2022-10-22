@@ -8,7 +8,7 @@ from marshmallow import fields, validate
 
 class Eval(fields.Str):
     def _serialize(
-        self, value: Any, attr: str, obj: Any, **kwargs: Any
+        self, value: Any, attr: Optional[str], obj: Any, **kwargs: Any
     ) -> None:
         pass
 
