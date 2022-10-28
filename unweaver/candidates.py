@@ -206,7 +206,7 @@ def choose_candidate(
             if (context == "origin") or (context == "both"):
                 is_invalid = True
                 u = candidate.n
-                for v, d in G.successors[u]:
+                for v, d in G.successors(u):
                     cost = edge_filter(u, v, d)
                     if cost is not None:
                         is_invalid = False
@@ -217,7 +217,7 @@ def choose_candidate(
             if (context == "destination") or (context == "both"):
                 is_invalid = True
                 v = candidate.n
-                for u, d in G.predecessors[v]:
+                for u, d in G.predecessors(v):
                     cost = edge_filter(u, v, d)
                     if cost is not None:
                         is_invalid = False
