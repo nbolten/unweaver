@@ -500,7 +500,9 @@ class FeatureTable:
                 # TODO: look into performance of this strategy. Another option
                 #       is to insert multiple values at once in a single
                 #       statement.
+                conn.execute("BEGIN")
                 conn.executemany(template, queue)
+                conn.execute("COMMIT")
             if counter is not None:
                 counter.update(n)
 
