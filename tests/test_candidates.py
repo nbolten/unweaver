@@ -1,15 +1,17 @@
-from shapely.geometry import LineString
+from shapely.geometry import LineString, Point
 
 from unweaver.candidates import (
+    choose_candidate,
     is_end_node,
     is_start_node,
     new_edge,
     reverse_edge,
     waypoint_candidates,
 )
+from unweaver.graph import ProjectedNode
 from unweaver.utils import haversine
 
-from .constants import BOOKSTORE_POINT
+from .constants import BOOKSTORE_POINT, EXAMPLE_NODE
 
 
 def test_waypoint_candidates(built_G):
@@ -100,3 +102,11 @@ def test_new_edge(built_G):
     assert d2["width"] == 0.4
     assert d2["incline"] == 0.1
     assert d2["length"] == 1
+
+
+def test_choose_candidate(built_G):
+    node_candidate = ProjectedNode(
+        n=EXAMPLE_NODE, geometry=Point(BOOKSTORE_POINT)
+    )
+    choose_candidate(built_G, [node_candidate], "origin")
+    choose_candidate(built_G, [node_candidate], "destination")
