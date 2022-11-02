@@ -4,6 +4,7 @@ from flask import g
 from marshmallow import Schema, fields
 
 
+from unweaver.exceptions import NoPathError
 from unweaver.graph import ProjectedNode
 from unweaver.graph_types import CostFunction, EdgeData
 from unweaver.geojson import Feature, Point, makePointFeature
@@ -11,7 +12,6 @@ from unweaver.graphs import DiGraphGPKG
 from unweaver.shortest_paths.shortest_path import (
     shortest_path_multi,
     waypoint_nodes,
-    NoPathError,
 )
 from .base_view import BaseView
 

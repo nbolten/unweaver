@@ -6,7 +6,9 @@ from typing import Any, Dict, Generator, Iterable, List, Tuple, TYPE_CHECKING
 
 from click._termui_impl import ProgressBar
 import geomet.wkb  # type: ignore
-import pyproj
+from pyproj import Transformer
+from pyproj.crs.crs import CRS
+from pyproj.enums import TransformDirection
 from shapely.geometry import LineString, Point, shape, Polygon  # type: ignore
 from shapely.geometry.base import BaseGeometry  # type: ignore
 from shapely.ops import transform  # type: ignore
@@ -62,7 +64,7 @@ class FeatureTable:
 
         self.add_srs()
 
-        self.transformer = pyproj.Transformer.from_crs(
+        self.transformer = Transformer.from_crs(
             f"epsg:{self.srid}", f"epsg:{TO_SRID}", always_xy=True
         )
 
@@ -215,10 +217,10 @@ class FeatureTable:
         top = y + distance
 
         left, bottom = self.transformer.transform(
-            left, bottom, direction=pyproj.enums.TransformDirection.INVERSE
+            left, bottom, direction=TransformDirection.INVERSE
         )
         right, top = self.transformer.transform(
-            right, top, direction=pyproj.enums.TransformDirection.INVERSE
+            right, top, direction=TransformDirection.INVERSE
         )
 
         return self.intersects(left, bottom, right, top)
@@ -440,7 +442,7 @@ class FeatureTable:
 
     def add_srs(self) -> None:
         # Add initial spatial ref
-        proj = pyproj.crs.CRS.from_authority("epsg", self.srid)
+        proj = CRS.from_authority("epsg", self.srid)
         with self.gpkg.connect() as conn:
             conn.execute(
                 """

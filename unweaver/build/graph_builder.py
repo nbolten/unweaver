@@ -6,7 +6,7 @@ from typing import List, Optional, Type
 from click._termui_impl import ProgressBar
 
 from unweaver.constants import BATCH_SIZE
-from unweaver.graphs.digraphgpkg import DiGraphGPKG
+from unweaver.graphs import DiGraphGPKG
 from unweaver.io import edge_generator
 
 

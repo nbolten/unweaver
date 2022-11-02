@@ -1,10 +1,10 @@
 import os
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
 from click._termui_impl import ProgressBar
 
 from unweaver.constants import DB_PATH
-from unweaver.graphs.digraphgpkg import DiGraphGPKG
+from unweaver.graphs import DiGraphGPKG
 
 from .graph_builder import GraphBuilder
 from .get_layers_paths import get_layers_paths
